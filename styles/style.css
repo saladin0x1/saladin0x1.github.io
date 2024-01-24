@@ -1,0 +1,77 @@
+/* Define CSS variables for color values */
+:root {
+	--background-color: #000;
+	--text-color: #fff;
+	--link-color: #0bc;
+	--highlight-color: #0f0;
+	--accent-color: #ff0096;
+  }
+  
+/* Global styles for the entire page */
+body {
+	background-color: var(--background-color);
+	margin: 0;
+	font-family: 'Consolas', monaco, monospace; /* Fallback for generic monospace font */
+	color: var(--text-color);
+	line-height: 1.6;
+	overflow: hidden; /* Hide the vertical scroll bar */
+  
+	/* Enable scrolling for touch devices */
+	touch-action: auto;
+	overflow-y: auto; /* Enable vertical scrolling */
+	-webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+  }
+  
+  /* Styles for the console element */
+  #console {
+	width: 100%;
+	margin: 50px 0;
+	padding: 20px;
+	font-size: 14px;
+	white-space: pre-wrap; /* Preserve line breaks */
+	overflow-wrap: break-word; /* Wrap long words */
+	background-color: var(--background-color);
+  }
+  
+  /* Styles for links */
+  a {
+	color: var(--link-color);
+	text-decoration: none;
+  }
+  .email {
+	color: var(--link-color); /* Your desired text color */
+	font-weight: bold; /* Your desired font weight */
+	/* Add any other styles you want to apply */
+  }
+  
+  
+  /* Styles for elements with ID 'bash' */
+  #bash {
+	color: var(--highlight-color);
+  }
+  
+  /* Styles for elements with ID 'c' */
+  #c-dir {
+	color: var(--link-color);
+  }
+  
+  /* Styles for elements with ID 'dir' */
+  #dir {
+	color: var(--accent-color);
+  }
+  
+  /* Animation styles for an element with ID 'quote' */
+  #quote {
+	animation: change 10s;
+  }
+  
+  /* Keyframes for the color change animation */
+  @keyframes change {
+	0%, 50% {
+	    color: var(--highlight-color);
+	}
+	100% {
+	    color: var(--background-color);
+	}
+  }
+  
