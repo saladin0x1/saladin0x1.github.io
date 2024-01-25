@@ -31,7 +31,7 @@ Want to add your touch? Go ahead, tweak the `index.html` and check out the `styl
 
 ### Custom Domain Setup
 
-1. Create a `CNAME` file, add your domain. shoutout to my registar "[TimeWebCloud]([https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site](https://timeweb.cloud/))"
+1. Create a `CNAME` file, add your domain. shoutout to my registar [TimeWebCloud](https://timeweb.cloud/) .
 2. Update DNS settings to match GitHub's guidance. [GitHub guide](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
 3. Patience is a virtue. Your portfolio will shine on your custom domain!
 
