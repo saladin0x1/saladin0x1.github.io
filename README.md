@@ -15,7 +15,7 @@ Hello! This is my digital playground - a terminal-inspired portfolio.
 
 ## Customize
 
-Want to add your touch? Go ahead, tweak the `index.html` and check out the `css` folder.
+Want to add your touch? Go ahead, tweak the `index.html` and check out the `styles/css` folder.
 
 ## Deployment
 
