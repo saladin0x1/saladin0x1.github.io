@@ -39,7 +39,7 @@ var Typer = {
             window.scrollBy(0, 50);
 
             // Use Linkify.js to make URLs clickable
-            linkifyElement(document.getElementById('console'));
+//            linkifyElement(document.getElementById('console'));
         }
 
         if (key.keyCode == 27) {
