@@ -1,6 +1,6 @@
-<span id="bash">saladin0x1@www</span>:<span id="dir">~</span><span id="c-dir">$</span> hostname
+<span id="bash">user@www</span>:<span id="dir">~</span><span id="c-dir">$</span> hostname
 saladin0x1.ru
-<span id="bash">saladin0x1@www</span>:<span id="dir">~</span><span id="c-dir">$</span> cd saladin0x1/
+<span id="bash">saladin0x1@www</span>:<span id="dir">~</span><span id="c-dir">$</span> su saladin0x1
 <span id="bash">saladin0x1@www</span>:<span id="dir">~</span><span id="c-dir">$</span> whoami
 "<span id="quote">Illusion is the first of all pleasures - Voltaire</span>". 
  Who am I?
