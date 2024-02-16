@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flashcard Quiz</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+</head>
+<body>
+  <div id="flashcard-container">
+    <div class="flashcard" onclick="toggleCard()">
+      <div class="card-front">
+        <div id="question"></div>
+      </div>
+      <div class="card-back">
+        <div id="answer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-container">
+    <button onclick="loadNextQuestion()">Next Question</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
