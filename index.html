@@ -1,0 +1,29 @@
+---
+layout: default            # Use the default layout
+title: whoami.saladin0x1.ru      # Page title
+---
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="saladin">
+    <meta name="description" content="portfolio">
+    <title>{{ page.title }}</title>  <!-- Use Jekyll variable for title -->
+    <link rel="icon" href="{{ '/assets/favicon.ico' | relative_url }}" type="image/x-icon">
+
+    <!-- Use a more recent version of jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/linkifyjs/3.0.4/linkify.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ '/styles/style.css' | relative_url }}">
+</head>
+
+<body>
+    <div id="console"></div>
+    <!-- Include your JavaScript file after jQuery -->
+    <script type="text/javascript" src="{{ '/scripts/script.js' | relative_url }}"></script>
+</body>
+
+</html>
