@@ -1,7 +1,7 @@
 var Typer = {
     text: '',
     index: 0,
-    speed: 2,
+    speed: 5,
     file: './assets/terminal-content.txt',
 
     // Initialization function
