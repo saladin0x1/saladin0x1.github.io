@@ -51,6 +51,9 @@ jobs:
       - name: Set up Ruby environment
         run: echo "PATH=/opt/hostedtoolcache/Ruby/3.1.4/x64/bin:$PATH" >> $GITHUB_ENV
 
+      - name: Install dependencies
+        run: bundle install
+
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
