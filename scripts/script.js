@@ -36,7 +36,7 @@ var Typer = {
 
             // Update console content and scroll window
             $('#console').html(text.replace(rtn, '<br/>'));
-            window.scrollBy(0, 50);
+            window.scrollBy(0, 1500);
 
             // Use Linkify.js to make URLs clickable
 //            linkifyElement(document.getElementById('console'));
