@@ -1,8 +1,10 @@
+### this needs further  updates and fixes 
+
 # Saladin's Terminal Playground
 
 Hello! This is my digital playground - a terminal-inspired portfolio.
 
-## [Live Demo](https://saladin0x1.ru/)
+## [Live Demo](https://whoami.saladin0x1.ru/)
 
 ## Usage
 
