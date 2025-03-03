@@ -70,7 +70,7 @@ Typer.init();
 // Use a timer to simulate typing
 var timer = setInterval(function () {
     Typer.addText({ keyCode: 123748 });
-}, 1000);
+}, 120);
 
 // Event listener for keydown to fast forward the text
 document.onkeydown = function (e) {
