@@ -1,0 +1,20 @@
+<span id="bash">user@www</span>:<span id="dir">~</span><span id="c-dir">$</span> hostname
+saladin0x1.ru 
+<span id="bash">user@www</span>:<span id="dir">~</span><span id="c-dir">$</span> su saladin0x1
+<span id="bash">saladin0x1@www</span>:<span id="dir">~</span><span id="c-dir">$</span> whoami
+"<span id="quote">Illusion is the first of all pleasures - Voltaire</span>". 
+Who am I?
+<p> Part-time 21-year-old, also stuck between fleeting desires
+And a yet unproven vision of who I should be.</p>
+ I've been told I live in the past, 
+and my social life won't tell you otherwise.
+
+Perhaps you'll find me here.
+
+Twitter. <a href="https://twitter.com/selouali01">@selouali01</a>
+Instagram. <a href="https://www.instagram.com/selouali01">@selouali01</a>
+GitHub. <a href="https://github.com/saladin0x1">@saladin0x1</a>
+Something worth the mailing ? 
+ Here is my academic:<a href="mailto:Salaheddine.Elouali@emsi-edu.ma"> Email</a>.
+<span class="email">Salaheddine.Elouali@emsi-edu.ma</span>
+<p>Cheers!</p>
