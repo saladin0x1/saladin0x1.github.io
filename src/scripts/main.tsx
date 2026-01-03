@@ -65,7 +65,7 @@ const SOCIAL_DATA = [
 
 function SocialsComponent() {
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <div className="btn-grid">
             {SOCIAL_DATA.map((social, index) => (
                 <a 
                     key={index} 
@@ -74,20 +74,8 @@ function SocialsComponent() {
                     rel="noopener noreferrer"
                     style={{ textDecoration: 'none' }}
                 >
-                    <div className="btn-sq" style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        gap: '8px',
-                        border: '1px solid var(--wire)',
-                        height: '31px',
-                        fontSize: '11px',
-                        color: '#aaa',
-                        fontFamily: "'Space Mono', monospace",
-                        transition: 'all 0.2s',
-                        cursor: 'pointer'
-                    }}>
-                        <social.icon size={16} color="#aaa" />
+                    <div className="btn-sq">
+                        <social.icon />
                         <span>{social.label}</span>
                     </div>
                 </a>
@@ -95,7 +83,6 @@ function SocialsComponent() {
         </div>
     );
 }
-
 const socialGrid = document.getElementById('social-grid');
 if (socialGrid) {
     socialGrid.innerHTML = '';
