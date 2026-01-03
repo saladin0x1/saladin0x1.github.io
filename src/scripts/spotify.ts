@@ -1,12 +1,73 @@
-// TEMPORARY TOKEN (Expires in 1 hour)
-const TEMP_TOKEN = 'BQCKbjcYCr5Bimo1jJZO_Hy_ILEe-0w9X1xkhTDgB5tzITP4T96jA0TkHQvWFmE78OJy6Fi0PxLfeUWLQnHNZDKtFPqTZmRmSzumYG2v7a8DlaoHiUILdbEgZVDbvGoGrHaZ-F1tEEQc-u2evvAZy3xDhT2gVK8WmzkyAT6dgy3ea7O0geyyTIaxjgVF5iVuSKh1TR1XkZ-0AVLkLkY6YYglYyZVhnRY2mcS1TlD9zVh5DKWaspATJqQNLwjcbDVqmBUfzp2Sx2Kzy3CKVx_h19fzlT7hPi1czst1y2QPu154ApXCTpbjOzg6mqkAyB2eV7EEz5X';
+// Spotify API Types
+export interface SpotifyArtist {
+  name: string;
+  id: string;
+}
 
-const NOW_PLAYING_ENDPOINT = `https://api.spotify.com/v1/me/player/currently-playing`;
+export interface SpotifyImage {
+  url: string;
+  height: number;
+  width: number;
+}
 
-export async function getNowPlaying() {
-    return fetch(NOW_PLAYING_ENDPOINT, {
-        headers: {
-            Authorization: `Bearer ${TEMP_TOKEN}`,
-        },
+export interface SpotifyAlbum {
+  name: string;
+  images: SpotifyImage[];
+}
+
+export interface SpotifyTrack {
+  name: string;
+  artists: SpotifyArtist[];
+  album: SpotifyAlbum;
+}
+
+export interface SpotifyCurrentlyPlaying {
+  is_playing: boolean;
+  item: SpotifyTrack | null;
+}
+
+// API Configuration
+const SPOTIFY_TOKEN = import.meta.env.VITE_SPOTIFY_TOKEN as string | undefined;
+const NOW_PLAYING_ENDPOINT = 'https://api.spotify.com/v1/me/player/currently-playing';
+
+export interface SpotifyApiResponse {
+  status: number;
+  data: SpotifyCurrentlyPlaying | null;
+  error?: string;
+}
+
+export async function getNowPlaying(): Promise<SpotifyApiResponse> {
+  if (!SPOTIFY_TOKEN) {
+    console.warn('VITE_SPOTIFY_TOKEN is not set');
+    return { status: 500, data: null, error: 'Token not configured' };
+  }
+
+  try {
+    const response = await fetch(NOW_PLAYING_ENDPOINT, {
+      headers: {
+        Authorization: `Bearer ${SPOTIFY_TOKEN}`,
+      },
     });
+
+    // No content - not playing
+    if (response.status === 204) {
+      return { status: 204, data: null };
+    }
+
+    // Auth error
+    if (response.status === 401) {
+      return { status: 401, data: null, error: 'Unauthorized' };
+    }
+
+    // Other errors
+    if (!response.ok) {
+      return { status: response.status, data: null, error: 'API Error' };
+    }
+
+    const data = await response.json() as SpotifyCurrentlyPlaying;
+    return { status: 200, data };
+  } catch (error) {
+    console.error('Spotify API Error:', error);
+    return { status: 500, data: null, error: 'Network Error' };
+  }
 }
