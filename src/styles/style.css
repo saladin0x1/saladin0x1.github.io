@@ -2,6 +2,13 @@
     --bg: #000000;
     --wire: rgba(255, 255, 255, 0.1);
     --font-mono: 'Space Mono', monospace;
+    --text-primary: #e0e0e0;
+    --text-secondary: #d0d0d0;
+    --text-muted: #999;
+    --text-dim: #888;
+    --text-faint: #666;
+    --text-ghost: #444;
+    --accent-green: #00ff00;
 }
 
 * {
@@ -12,12 +19,13 @@
 
 body {
     background-color: var(--bg);
-    color: #e0e0e0; /* Improved contrast text */
+    color: var(--text-primary);
     font-family: var(--font-mono);
     font-size: 14px;
     line-height: 1.5;
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: 40px 2.5%;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -35,6 +43,7 @@ body::before {
     z-index: 100;
 }
 
+/* Layout */
 .wireframe-container {
     display: grid;
     grid-template-columns: 1fr 320px;
@@ -53,20 +62,25 @@ body::before {
     overflow: hidden;
 }
 
-.header-bar { display: none; }
+/* Profile Section */
+.profile-row {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
 
-.profile-row { display: flex; gap: 30px; align-items: flex-start; }
-.avatar-sq { 
-    width: 160px; 
-    height: 160px; 
-    border: 1px solid var(--wire); 
+.avatar-sq {
+    width: 160px;
+    height: 160px;
+    border: 1px solid var(--wire);
     flex-shrink: 0;
-    background-image: 
+    background-image:
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
 }
 
+/* Bio Styles */
 .bio-lines {
     flex: 1;
     display: flex;
@@ -76,9 +90,27 @@ body::before {
     line-height: 1.6;
     font-size: 14px;
 }
-.line { height: 1px; background: var(--wire); width: 100%; }
-.line.short { width: 60%; }
 
+.bio-quote {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 0;
+}
+
+.bio-heading {
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 8px;
+}
+
+.bio-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+/* Content Blocks */
 .content-block {
     height: 300px;
     border: 1px solid var(--wire);
@@ -89,8 +121,23 @@ body::before {
     background-size: 10px 10px;
 }
 
-.list-block { display: flex; flex-direction: column; gap: 20px; }
-.list-item { height: 1px; background: var(--wire); width: 100%; }
+/* Dash Container */
+.dash-wrapper {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    overflow: hidden;
+}
+
+.dash-line {
+    color: var(--text-ghost);
+    font-size: 14px;
+    line-height: 1;
+    overflow: hidden;
+    white-space: nowrap;
+}
 
 /* Right Column */
 .right-col {
@@ -101,15 +148,19 @@ body::before {
     padding-left: 30px;
 }
 
-.widget-box { 
-    border: 1px solid var(--wire); 
+/* Widget Box */
+.widget-box {
+    border: 1px solid var(--wire);
     padding: 15px;
-    background-image: 
+    background-image:
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
 }
-.widget-box.sm { height: 70px; } /* Matches Avatar Height calc */
+
+.widget-box.sm {
+    height: 70px;
+}
 
 .widget-box.md {
     height: auto;
@@ -119,25 +170,121 @@ body::before {
     gap: 6px;
 }
 
+/* Status Widget */
+.status-row {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.status-online {
+    color: var(--accent-green);
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+    font-weight: bold;
+}
+
+.uptime-value {
+    color: var(--text-secondary);
+}
+
+/* Spotify Widget */
+.spotify-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    height: 100%;
+}
+
+.spotify-art,
+.spotify-art-placeholder {
+    width: 40px;
+    height: 40px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.spotify-art img {
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.spotify-disc {
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--text-ghost);
+    border-radius: 50%;
+    opacity: 0.5;
+}
+
+.spotify-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.spotify-info--playing {
+    flex: 1;
+    overflow: hidden;
+    gap: 4px;
+}
+
+.spotify-label {
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: 0.5px;
+    font-weight: bold;
+}
+
+.spotify-label--error {
+    color: #fff;
+}
+
+.spotify-status {
+    font-size: 12px;
+    color: var(--text-ghost);
+}
+
+.spotify-status--error {
+    color: #bbb;
+}
+
+.spotify-title {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #c0c0c0;
+}
+
+.spotify-artist {
+    font-size: 12px;
+    color: #777;
+}
+
+/* Nav Widget */
 .nav-item {
     font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
-    color: #888;
+    color: var(--text-dim);
     line-height: 1.4;
 }
 
-.btn-grid { 
-
-    display: grid; 
-
-    grid-template-columns: 1fr 1fr; 
-
-    gap: 10px; 
-
+/* Social Grid */
+.btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 }
 
-
+.social-link {
+    text-decoration: none;
+}
 
 .btn-sq {
     width: 100%;
@@ -149,45 +296,37 @@ body::before {
     gap: 10px;
     font-size: 13px;
     color: #bbb;
-    font-family: 'Space Mono', monospace;
+    font-family: var(--font-mono);
     transition: all 0.2s ease;
     cursor: pointer;
     background: transparent;
 }
 
-
-
 .btn-sq:hover {
-
     border-color: #fff;
-
     color: #fff;
-
     background-color: rgba(255, 255, 255, 0.05);
-
 }
-
-
 
 .btn-sq svg {
-
-    fill: currentColor; /* Inherit color from parent for hover effect */
-
+    fill: currentColor;
     width: 18px;
-
     height: 18px;
-
 }
 
+/* Bottom Filler */
 .bottom-filler {
     flex: 1;
-    border: 1px solid var(--wire);
     min-height: 400px;
-    background-image:
-        linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
-        linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
-    background-size: 10px 10px;
 }
+
+/* Footer */
+.footer {
+    font-size: 14px;
+    color: var(--text-ghost);
+    margin-top: 20px;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .wireframe-container {
@@ -198,37 +337,41 @@ body::before {
         gap: 30px;
     }
 
-    /* Pull children into the container to order them individually */
-    .left-col, .right-col {
+    .left-col,
+    .right-col {
         display: contents;
     }
 
-    /* 1. Bio & Avatar */
-    .profile-row { 
-        order: 1; 
+    .profile-row {
+        order: 1;
         width: 100%;
-        align-items: center; 
+        align-items: center;
         height: auto;
     }
 
-    /* 2. Status Widget (First child of Right Col) */
-    .right-col > .widget-box:nth-child(1) { order: 2; width: 100%; }
+    .widget-box.sm:first-of-type {
+        order: 2;
+        width: 100%;
+    }
 
-    /* 3. Spotify Widget */
-    #spotify-widget { order: 3; width: 100%; }
+    .content-block {
+        order: 5;
+        width: 100%;
+    }
 
-    /* 4. Social Grid Widget */
-    .widget-box:has(#social-grid) { order: 4; width: 100%; }
-    
-    /* 5. Content Blocks and others */
-    .content-block { order: 5; width: 100%; }
-    .widget-box.md { order: 6; width: 100%; } /* Nav box */
-    .bottom-filler { order: 7; width: 100%; }
+    .widget-box.md {
+        order: 6;
+        width: 100%;
+    }
 
-    /* 6. Copyright at the very end */
-    .right-col > div[style*="font-family: 'Space Mono'"] { 
-        order: 99; 
-        width: 100%; 
+    .bottom-filler {
+        order: 7;
+        width: 100%;
+    }
+
+    .footer {
+        order: 99;
+        width: 100%;
         text-align: center;
     }
 

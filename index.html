@@ -8,59 +8,7 @@
     <link rel="stylesheet" href="src/styles/style.css">
 </head>
 <body>
-    <div class="wireframe-container">
-        <!-- Left Side -->
-        <div class="left-col">
-            <div class="profile-row">
-                <div class="avatar-sq">
-                    <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="#050505"/>
-                        <circle cx="50" cy="40" r="20" fill="#0a0a0a" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>
-                        <path d="M20 90C20 70 30 60 50 60C70 60 80 70 80 90" fill="#0a0a0a" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>
-                    </svg>
-                </div>
-                <div class="bio-lines" style="font-family: 'Space Mono', monospace;">
-                    <p style="margin-bottom: 0; color: #999; font-size: 13px;">"Illusion is the first of all pleasures - Voltaire".</p>
-                    <p style="margin-top: 8px; color: #e0e0e0; font-weight: bold; font-size: 15px;">Who am I?</p>
-                    <p style="margin-top: 8px; color: #d0d0d0; font-size: 14px;">Part-time 22-year-old, also stuck between fleeting desires<br>
-                    and a yet unproven vision of who I should be.</p>
-                    <p style="margin-top: 12px; color: #d0d0d0; font-size: 14px;">I've been told I live in the past,<br>
-                    and my social life won't tell you otherwise.</p>
-                </div>
-            </div>
-
-            <div class="content-block" id="content-block-1"></div>
-            <div class="content-block" id="content-block-2"></div>
-        </div>
-
-        <!-- Right Side -->
-        <div class="right-col">
-            <div class="widget-box sm">
-                <div style="font-size: 13px; color: #999; margin-bottom: 6px;">STATUS: <span id="saladin-status" style="color: #00ff00; text-shadow: 0 0 5px rgba(0,255,0,0.2); font-weight: bold;">ONLINE</span></div>
-                <div style="font-size: 13px; color: #999;">UPTIME: <span id="saladin-uptime" style="color: #d0d0d0;">22Y 96D</span></div>
-            </div>
-
-            <div class="widget-box sm" id="spotify-widget"></div>
-            
-            <div class="widget-box md">
-                <div class="nav-item">_ _ _ _ _ _</div>
-                <div class="nav-item">_ _ _ _ _ _</div>
-                <div class="nav-item">_ _ _ _ _ _</div>
-                <div class="nav-item">_ _ _ _ _ _</div>
-            </div>
-
-            <div class="widget-box">
-                <div id="social-grid"></div>
-            </div>
-
-            <div class="bottom-filler" id="bottom-filler"></div>
-
-            <div style="font-size: 14px; color: #444; margin-top: 20px; font-family: 'Space Mono', monospace;">
-                2003-2026
-            </div>
-        </div>
-    </div>
-
+    <div id="root"></div>
     <script src="/src/scripts/main.tsx" type="module"></script>
 </body>
 </html>
