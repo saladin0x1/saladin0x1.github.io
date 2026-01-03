@@ -15,11 +15,11 @@
                 <div class="avatar-sq">
                     <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <rect width="100" height="100" fill="#050505"/>
-                        <circle cx="50" cy="40" r="20" fill="#0a0a0a"/>
-                        <path d="M20 90C20 70 30 60 50 60C70 60 80 70 80 90" fill="#0a0a0a"/>
+                        <circle cx="50" cy="40" r="20" fill="#0a0a0a" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>
+                        <path d="M20 90C20 70 30 60 50 60C70 60 80 70 80 90" fill="#0a0a0a" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>
                     </svg>
                 </div>
-                <div class="bio-lines" style="font-size: 13px; line-height: 1.6; color: #ccc; font-family: 'Space Mono', monospace;">
+                <div class="bio-lines" style="font-size: 15px; line-height: 1.6; color: #ccc; font-family: 'Space Mono', monospace;">
                     <p style="margin-bottom: 10px; color: #888;">"Illusion is the first of all pleasures - Voltaire".</p>
                     <p>Who am I?</p>
                     <p>Part-time 22-year-old, also stuck between fleeting desires<br>
@@ -30,43 +30,42 @@
                 </div>
             </div>
 
-            <!-- Content Area (Empty) -->
             <div class="content-block"></div>
-
-            <!-- List Area -->
-            <div class="list-block">
-                <div class="list-item">----------------------------------------------------------------------------------------------------</div>
-                <div class="list-item">----------------------------------------------------------------------------------------------------</div>
-                <div class="list-item">----------------------------------------------------------------------------------------------------</div>
-            </div>
+            <div class="content-block"></div>
         </div>
 
         <!-- Right Side -->
         <div class="right-col">
             <div class="widget-box sm">
-                <div style="font-size: 12px; color: #444;">STATUS: <span id="sys-status" style="color: #00ff00;">ONLINE</span></div>
-                <div style="font-size: 10px; color: #333;">UPTIME: <span id="sys-uptime">22Y 96D</span></div>
+                <div style="font-size: 14px; color: #888; margin-bottom: 4px;">STATUS: <span id="saladin-status" style="color: #00ff00; text-shadow: 0 0 5px rgba(0,255,0,0.2);">ONLINE</span></div>
+                <div style="font-size: 13px; color: #888;">UPTIME: <span id="saladin-uptime" style="color: #ccc;">22Y 96D</span></div>
             </div>
-            <div class="widget-box sm" id="spotify-widget">
-                <!-- Content rendered via main.ts -->
-            </div>
+
+            <div class="widget-box sm" id="spotify-widget"></div>
             
             <div class="widget-box md">
-                <div class="nav-item">_ _ _ _ _ _ _ _ _ _</div>
-                <div class="nav-item">_ _ _ _ _ _ _ _ _ _</div>
-                <div class="nav-item">_ _ _ _ _ _ _ _ _ _</div>
-                <div class="nav-item">_ _ _ _ _ _ _ _ _ _</div>
+                <div class="nav-item" style="color: rgba(255,255,255,0.05);">_ _ _ _ _ _ _ _ _ _</div>
+                <div class="nav-item" style="color: rgba(255,255,255,0.05);">_ _ _ _ _ _ _ _ _ _</div>
+                <div class="nav-item" style="color: rgba(255,255,255,0.05);">_ _ _ _ _ _ _ _ _ _</div>
+                <div class="nav-item" style="color: rgba(255,255,255,0.05);">_ _ _ _ _ _ _ _ _ _</div>
             </div>
 
             <div class="widget-box">
-                <div class="btn-grid" id="social-grid">
-                    <!-- Links rendered via main.ts -->
-                </div>
+                <div id="social-grid"></div>
             </div>
 
             <div class="bottom-filler"></div>
+
+            <div style="font-size: 16px; color: #444; margin-top: 20px; font-family: 'Space Mono', monospace; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>2003-2026</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M15 9.354a4 4 0 1 0 0 5.292"></path>
+                </svg>
+            </div>
         </div>
     </div>
-    <script src="/src/scripts/main.ts" type="module"></script>
+
+    <script src="/src/scripts/main.tsx" type="module"></script>
 </body>
 </html>
