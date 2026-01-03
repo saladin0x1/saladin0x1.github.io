@@ -29,9 +29,9 @@ function renderSpotify(track: SpotifyTrack | null, status?: number) {
                 <div style="width: 40px; height: 40px; background: #0a0a0a; border: 1px solid #333; display: flex; align-items: center; justify-content: center;">
                     <div style="width: 12px; height: 12px; border: 1px solid #444; border-radius: 50%; opacity: 0.5;"></div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="font-size: 11px; color: ${labelColor}; letter-spacing: 1px; font-weight: bold;">SPOTIFY</div>
-                    <div style="font-size: 10px; color: ${subColor}; opacity: 0.8;">${statusText}</div>
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="font-size: 12px; color: ${labelColor}; letter-spacing: 0.5px; font-weight: bold;">SPOTIFY</div>
+                    <div style="font-size: 12px; color: ${subColor};">${statusText}</div>
                 </div>
             </div>
         `;
@@ -44,11 +44,11 @@ function renderSpotify(track: SpotifyTrack | null, status?: number) {
                 ${track.albumArt ? `<img src="${track.albumArt}" style="width:100%; height:100%; opacity:0.8;">` : '<div style="width:10px; height:10px; background:#333; border-radius:50%;"></div>'}
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden;">
-                <div style="font-size: 11px; color: #444;">LISTENING...</div>
-                <div style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #888;">
+                <div style="font-size: 12px; color: #666; font-weight: bold;">LISTENING...</div>
+                <div style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #c0c0c0;">
                     ${track.title}
                 </div>
-                <div style="font-size: 11px; color: #444;">${track.artist}</div>
+                <div style="font-size: 12px; color: #777;">${track.artist}</div>
             </div>
         </div>
     `;
@@ -111,9 +111,43 @@ function updateUptime() {
     uptimeElement.textContent = `${years}Y ${days}D ${hours}H ${minutes}M ${seconds}S`;
 }
 
+// --- Dash Generator ---
+
+function fillDashContainer(elementId: string, numLines: number = 6) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+
+    // Create inner wrapper
+    const wrapper = document.createElement('div');
+    wrapper.style.padding = '15px';
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.justifyContent = 'space-between';
+    wrapper.style.height = '100%';
+    wrapper.style.overflow = 'hidden';
+
+    for (let i = 0; i < numLines; i++) {
+        const dashLine = document.createElement('div');
+        dashLine.style.color = '#444';
+        dashLine.style.fontSize = '14px';
+        dashLine.style.lineHeight = '1';
+        dashLine.style.overflow = 'hidden';
+        dashLine.style.whiteSpace = 'nowrap';
+        dashLine.textContent = '_ '.repeat(200);
+        wrapper.appendChild(dashLine);
+    }
+
+    container.appendChild(wrapper);
+}
+
 // --- Initialization ---
 
 console.log("Initializing Systems...");
+
+// Generate dashes
+fillDashContainer('content-block-1', 12);
+fillDashContainer('content-block-2', 12);
+fillDashContainer('bottom-filler', 18);
 
 let spotifyInterval: number | undefined;
 
