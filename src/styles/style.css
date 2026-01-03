@@ -47,7 +47,16 @@ body::before {
 .header-bar { display: none; }
 
 .profile-row { display: flex; gap: 30px; align-items: flex-start; }
-.avatar-sq { width: 160px; height: 160px; border: 1px solid var(--wire); flex-shrink: 0; }
+.avatar-sq { 
+    width: 160px; 
+    height: 160px; 
+    border: 1px solid var(--wire); 
+    flex-shrink: 0;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
+}
 
 .bio-lines {
     flex: 1;
@@ -62,6 +71,10 @@ body::before {
 .content-block {
     height: 300px;
     border: 1px solid var(--wire);
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
 }
 
 .list-block { display: flex; flex-direction: column; gap: 20px; }
@@ -76,7 +89,14 @@ body::before {
     padding-left: 30px;
 }
 
-.widget-box { border: 1px solid var(--wire); padding: 15px; }
+.widget-box { 
+    border: 1px solid var(--wire); 
+    padding: 15px;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
+}
 .widget-box.sm { height: 70px; } /* Matches Avatar Height calc */
 
 .widget-box.md {
@@ -101,8 +121,11 @@ body::before {
     flex: 1;
     border: 1px solid var(--wire);
     min-height: 400px;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
 }
-
 /* Responsive */
 @media (max-width: 900px) {
     .wireframe-container {
