@@ -114,8 +114,71 @@ body::before {
     color: var(--wire);
 }
 
-.btn-grid { display: grid; grid-template-columns: 88px 88px; gap: 10px; }
-.btn-sq { width: 88px; height: 31px; border: 1px solid var(--wire); }
+.btn-grid { 
+
+    display: grid; 
+
+    grid-template-columns: 1fr 1fr; 
+
+    gap: 10px; 
+
+}
+
+
+
+.btn-sq { 
+
+    width: 100%; 
+
+    height: 40px; 
+
+    border: 1px solid var(--wire);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    font-size: 12px;
+
+    color: #aaa;
+
+    font-family: 'Space Mono', monospace;
+
+    transition: all 0.2s ease;
+
+    cursor: pointer;
+
+    background: transparent;
+
+}
+
+
+
+.btn-sq:hover {
+
+    border-color: #fff;
+
+    color: #fff;
+
+    background-color: rgba(255, 255, 255, 0.05);
+
+}
+
+
+
+.btn-sq svg {
+
+    fill: currentColor; /* Inherit color from parent for hover effect */
+
+    width: 18px;
+
+    height: 18px;
+
+}
 
 .bottom-filler {
     flex: 1;
@@ -129,16 +192,52 @@ body::before {
 /* Responsive */
 @media (max-width: 900px) {
     .wireframe-container {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         max-width: 600px;
         margin: 0 auto;
+        gap: 30px;
     }
+
+    /* Pull children into the container to order them individually */
+    .left-col, .right-col {
+        display: contents;
+    }
+
+    /* 1. Bio & Avatar */
+    .profile-row { 
+        order: 1; 
+        width: 100%;
+        align-items: center; 
+        height: auto;
+    }
+
+    /* 2. Status Widget (First child of Right Col) */
+    .right-col > .widget-box:nth-child(1) { order: 2; width: 100%; }
+
+    /* 3. Spotify Widget */
+    #spotify-widget { order: 3; width: 100%; }
+
+    /* 4. Social Grid Widget */
+    .widget-box:has(#social-grid) { order: 4; width: 100%; }
+    
+    /* 5. Content Blocks and others */
+    .content-block { order: 5; width: 100%; }
+    .widget-box.md { order: 6; width: 100%; } /* Nav box */
+    .bottom-filler { order: 7; width: 100%; }
+
+    /* 6. Copyright at the very end */
+    .right-col > div[style*="font-family: 'Space Mono'"] { 
+        order: 99; 
+        width: 100%; 
+        text-align: center;
+    }
+
     .right-col {
         border-left: none;
-        border-top: 1px solid var(--wire);
         padding-left: 0;
-        padding-top: 30px;
     }
+
     .avatar-sq {
         width: 120px;
         height: 120px;
