@@ -9,6 +9,7 @@
     --text-faint: #666;
     --text-ghost: #444;
     --accent-green: #00ff00;
+    --accent-orange: #f97316;
 }
 
 * {
@@ -37,7 +38,7 @@ body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: url('https://grainy-gradients.vercel.app/noise.svg');
+    background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48ZmlsdGVyIGlkPSJub2lzZSIgeD0iMCIgeT0iMCI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48ZmVCbGVuZCBtb2RlPSJzY3JlZW4iLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+');
     opacity: 0.04;
     pointer-events: none;
     z-index: 100;
@@ -175,6 +176,9 @@ body::before {
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
     transition: all 0.3s ease;
+    /* Strict containment */
+    overflow: hidden;
+    min-width: 0;
 }
 
 .widget-box:hover {
@@ -204,6 +208,12 @@ body::before {
 .status-online {
     color: var(--accent-green);
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+    font-weight: bold;
+}
+
+.status-sleeping {
+    color: var(--accent-orange);
+    text-shadow: 0 0 5px rgba(249, 115, 22, 0.2);
     font-weight: bold;
 }
 
@@ -255,6 +265,8 @@ body::before {
     flex: 1;
     overflow: hidden;
     gap: 4px;
+    min-width: 0; /* Critical for flex child truncation */
+    width: 100%;
 }
 
 .spotify-label {
@@ -262,6 +274,8 @@ body::before {
     color: var(--text-faint);
     letter-spacing: 0.5px;
     font-weight: bold;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .spotify-label--error {
@@ -271,6 +285,12 @@ body::before {
 .spotify-status {
     font-size: 12px;
     color: var(--text-ghost);
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.marquee-container {
+    mask-image: linear-gradient(to right, black 0%, black 95%, transparent 100%);
 }
 
 .spotify-status--error {
@@ -397,35 +417,41 @@ body::before {
         width: 100%;
     }
 
-    /* 3. Spotify */
-    .spotify-widget {
+    /* 3. Frequency/Last.fm */
+    .frequency-widget {
         order: 3;
         width: 100%;
     }
 
-    /* 4. Social Grid */
-    .social-widget {
+    /* 4. Spotify */
+    .spotify-widget {
         order: 4;
         width: 100%;
     }
 
-    /* 5. Nav */
-    .nav-widget {
+    /* 5. Social Grid */
+    .social-widget {
         order: 5;
         width: 100%;
     }
 
-    /* 6. Content blocks */
-    .content-block {
+    /* 6. Nav */
+    .nav-widget {
         order: 6;
+        width: 100%;
+    }
+
+    /* 7. Content blocks */
+    .content-block {
+        order: 7;
         width: 100%;
         height: 150px;
         overflow: hidden;
     }
 
-    /* 7. Bottom filler */
+    /* 8. Bottom filler */
     .bottom-filler {
-        order: 7;
+        order: 8;
         width: 100%;
         min-height: 150px;
     }
