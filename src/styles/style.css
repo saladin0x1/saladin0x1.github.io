@@ -363,12 +363,17 @@ body::before {
 
 /* Responsive */
 @media (max-width: 900px) {
+    body {
+        padding: 30px 25px;
+    }
+
     .wireframe-container {
         display: flex;
         flex-direction: column;
-        max-width: 600px;
+        width: 100%;
+        max-width: 340px;
         margin: 0 auto;
-        gap: 30px;
+        gap: 12px;
     }
 
     .left-col,
@@ -376,37 +381,61 @@ body::before {
         display: contents;
     }
 
+    /* 1. Avatar + Bio */
     .profile-row {
         order: 1;
         width: 100%;
+        flex-direction: column;
         align-items: center;
-        height: auto;
+        text-align: center;
+        gap: 12px;
     }
 
-    .widget-box.sm:first-of-type {
+    /* 2. Status/Uptime */
+    .status-widget {
         order: 2;
         width: 100%;
     }
 
-    .content-block {
+    /* 3. Spotify */
+    .spotify-widget {
+        order: 3;
+        width: 100%;
+    }
+
+    /* 4. Social Grid */
+    .social-widget {
+        order: 4;
+        width: 100%;
+    }
+
+    /* 5. Nav */
+    .nav-widget {
         order: 5;
         width: 100%;
     }
 
-    .widget-box.md {
+    /* 6. Content blocks */
+    .content-block {
         order: 6;
         width: 100%;
+        height: 150px;
+        overflow: hidden;
     }
 
+    /* 7. Bottom filler */
     .bottom-filler {
         order: 7;
         width: 100%;
+        min-height: 150px;
     }
 
+    /* 8. Footer */
     .footer {
         order: 99;
         width: 100%;
         text-align: center;
+        margin-top: 10px;
     }
 
     .right-col {
@@ -415,7 +444,66 @@ body::before {
     }
 
     .avatar-sq {
-        width: 120px;
-        height: 120px;
+        width: 90px;
+        height: 90px;
+    }
+
+    .bio-lines {
+        text-align: center;
+    }
+
+    .bio-quote,
+    .bio-heading,
+    .bio-text {
+        font-size: 12px;
+    }
+
+    .widget-box.sm {
+        height: 60px;
+    }
+
+    .widget-box.md {
+        min-height: 100px;
+    }
+
+    .widget-box {
+        padding: 12px;
+    }
+
+    .status-row {
+        font-size: 11px;
+    }
+
+    .spotify-label,
+    .spotify-status,
+    .spotify-artist {
+        font-size: 11px;
+    }
+
+    .spotify-title {
+        font-size: 12px;
+    }
+
+    .nav-item {
+        font-size: 12px;
+        padding: 3px 0;
+    }
+
+    .btn-sq {
+        height: 36px;
+        font-size: 11px;
+    }
+
+    .btn-grid {
+        gap: 8px;
+    }
+
+    .dash-wrapper {
+        padding: 10px;
+    }
+
+    .dash-line {
+        font-size: 12px;
+        width: 100%;
     }
 }

@@ -174,7 +174,7 @@ function StatusWidget() {
   const uptime = useUptime(BIRTHDAY);
 
   return (
-    <div className="widget-box sm">
+    <div className="widget-box sm status-widget">
       <div className="status-row">
         STATUS: <span className="status-online">ONLINE</span>
       </div>
@@ -190,7 +190,7 @@ function SpotifyWidget() {
 
   if (spotify.status === 'error') {
     return (
-      <div className="widget-box sm">
+      <div className="widget-box sm spotify-widget">
         <div className="spotify-container">
           <div className="spotify-art-placeholder">
             <div className="spotify-disc" />
@@ -206,7 +206,7 @@ function SpotifyWidget() {
 
   if (!spotify.isPlaying) {
     return (
-      <div className="widget-box sm">
+      <div className="widget-box sm spotify-widget">
         <div className="spotify-container">
           <div className="spotify-art-placeholder">
             <div className="spotify-disc" />
@@ -221,7 +221,7 @@ function SpotifyWidget() {
   }
 
   return (
-    <div className="widget-box sm">
+    <div className="widget-box sm spotify-widget">
       <div className="spotify-container">
         <div className="spotify-art">
           {spotify.albumArt && <img src={spotify.albumArt} alt="Album art" />}
@@ -238,7 +238,7 @@ function SpotifyWidget() {
 
 function NavWidget() {
   return (
-    <div className="widget-box md">
+    <div className="widget-box md nav-widget">
       <div className="nav-item">_ _ _ _ _ _</div>
       <div className="nav-item">_ _ _ _ _ _</div>
       <div className="nav-item">_ _ _ _ _ _</div>
@@ -249,7 +249,7 @@ function NavWidget() {
 
 function SocialGrid() {
   return (
-    <div className="widget-box">
+    <div className="widget-box social-widget">
       <div className="btn-grid">
         {SOCIAL_LINKS.map((social, index) => (
           <a
