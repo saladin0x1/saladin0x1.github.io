@@ -78,6 +78,13 @@ body::before {
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
+    transition: all 0.3s ease;
+}
+
+.avatar-sq:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    transform: scale(1.02);
 }
 
 /* Bio Styles */
@@ -119,6 +126,16 @@ body::before {
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
+    transition: all 0.3s ease;
+}
+
+.content-block:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.03);
+}
+
+.content-block:hover .dash-line {
+    color: var(--text-dim);
 }
 
 /* Dash Container */
@@ -137,6 +154,7 @@ body::before {
     line-height: 1;
     overflow: hidden;
     white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
 /* Right Column */
@@ -156,6 +174,12 @@ body::before {
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
+    transition: all 0.3s ease;
+}
+
+.widget-box:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.03);
 }
 
 .widget-box.sm {
@@ -273,6 +297,14 @@ body::before {
     overflow: hidden;
     color: var(--text-dim);
     line-height: 1.4;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.nav-item:hover {
+    color: var(--text-primary);
+    padding-left: 8px;
 }
 
 /* Social Grid */
@@ -306,6 +338,8 @@ body::before {
     border-color: #fff;
     color: #fff;
     background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
 }
 
 .btn-sq svg {
