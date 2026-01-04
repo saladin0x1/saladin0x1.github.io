@@ -8,3 +8,5 @@ dist/
 helpers/
 .env
 .env.local
+CLAUDE.md
+GEMINI.md

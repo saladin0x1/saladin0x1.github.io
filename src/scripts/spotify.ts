@@ -56,6 +56,7 @@ export async function getNowPlaying(): Promise<SpotifyApiResponse> {
 
     // Auth error
     if (response.status === 401) {
+      console.warn('SPOTIFY UNDER MAINTENANCE (401)');
       return { status: 401, data: null, error: 'Unauthorized' };
     }
 
@@ -67,7 +68,8 @@ export async function getNowPlaying(): Promise<SpotifyApiResponse> {
     const data = await response.json() as SpotifyCurrentlyPlaying;
     return { status: 200, data };
   } catch (error) {
-    console.error('Spotify API Error:', error);
+    // If it's a 401, we've already handled it above. 
+    // This catch is for network level failures.
     return { status: 500, data: null, error: 'Network Error' };
   }
 }
