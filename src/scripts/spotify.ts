@@ -26,9 +26,33 @@ export interface SpotifyCurrentlyPlaying {
   item: SpotifyTrack | null;
 }
 
-// API Configuration
-const SPOTIFY_TOKEN = import.meta.env.VITE_SPOTIFY_TOKEN as string | undefined;
-const NOW_PLAYING_ENDPOINT = 'https://api.spotify.com/v1/me/player/currently-playing';
+// Spotify API Types
+export interface SpotifyArtist {
+  name: string;
+  id: string;
+}
+
+export interface SpotifyImage {
+  url: string;
+  height: number;
+  width: number;
+}
+
+export interface SpotifyAlbum {
+  name: string;
+  images: SpotifyImage[];
+}
+
+export interface SpotifyTrack {
+  name: string;
+  artists: SpotifyArtist[];
+  album: SpotifyAlbum;
+}
+
+export interface SpotifyCurrentlyPlaying {
+  is_playing: boolean;
+  item: SpotifyTrack | null;
+}
 
 export interface SpotifyApiResponse {
   status: number;
@@ -37,24 +61,15 @@ export interface SpotifyApiResponse {
 }
 
 export async function getNowPlaying(): Promise<SpotifyApiResponse> {
-  if (!SPOTIFY_TOKEN) {
-    console.warn('VITE_SPOTIFY_TOKEN is not set');
-    return { status: 500, data: null, error: 'Token not configured' };
-  }
-
   try {
-    const response = await fetch(NOW_PLAYING_ENDPOINT, {
-      headers: {
-        Authorization: `Bearer ${SPOTIFY_TOKEN}`,
-      },
-    });
+    const response = await fetch('/api/spotify');
 
     // No content - not playing
     if (response.status === 204) {
       return { status: 204, data: null };
     }
 
-    // Auth error
+    // Auth error or maintenance
     if (response.status === 401) {
       console.warn('SPOTIFY UNDER MAINTENANCE (401)');
       return { status: 401, data: null, error: 'Unauthorized' };
@@ -68,8 +83,6 @@ export async function getNowPlaying(): Promise<SpotifyApiResponse> {
     const data = await response.json() as SpotifyCurrentlyPlaying;
     return { status: 200, data };
   } catch (error) {
-    // If it's a 401, we've already handled it above. 
-    // This catch is for network level failures.
     return { status: 500, data: null, error: 'Network Error' };
   }
 }
