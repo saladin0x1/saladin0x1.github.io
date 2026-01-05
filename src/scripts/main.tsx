@@ -18,7 +18,7 @@ interface SocialLink {
 const SOCIAL_LINKS: SocialLink[] = [
   { label: 'INSTA', url: 'https://instagram.com/selouali01', icon: FaInstagram },
   { label: 'X', url: 'https://x.com/selouali01', icon: FaXTwitter },
-  { label: 'LINKEDIN', url: 'https://linkedin.com/in/selouali', icon: FaLinkedin },
+  { label: 'LINKEDIN', url: 'https://linkedin.com/in/saladin0x1', icon: FaLinkedin },
   { label: 'GITHUB', url: 'https://github.com/saladin0x1', icon: FaGithub },
 ];
 

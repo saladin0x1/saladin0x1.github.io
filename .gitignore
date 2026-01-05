@@ -10,3 +10,5 @@ helpers/
 .env.local
 CLAUDE.md
 GEMINI.md
+package-lock.json
+capture.js
