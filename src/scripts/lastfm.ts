@@ -1,7 +1,5 @@
 // Last.fm API Configuration
-const LASTFM_USER = import.meta.env.VITE_LASTFM_USER as string;
-const LASTFM_API_KEY = import.meta.env.VITE_LASTFM_API_KEY as string;
-const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
+// Keys are now handled in functions/api/lastfm.ts
 
 export interface LastFmTrack {
   name: string;
@@ -27,24 +25,18 @@ export interface FrequencyState {
 }
 
 export async function getFrequency(): Promise<FrequencyState> {
-  const params = new URLSearchParams({
-    method: 'user.getrecenttracks',
-    user: LASTFM_USER,
-    api_key: LASTFM_API_KEY,
-    format: 'json',
-    limit: '1',
-  });
-
   try {
-    const res = await fetch(`${BASE_URL}?${params.toString()}`);
+    const res = await fetch('/api/lastfm');
     if (!res.ok) throw new Error('API Error');
     
     const data: LastFmResponse = await res.json();
-    const track = data.recenttracks.track[0];
-
-    if (!track) {
-      return { isPlaying: false, track: '', artist: '', art: '', url: '', status: 'history' };
+    
+    // Safety check for empty response or invalid structure
+    if (!data.recenttracks || !data.recenttracks.track || data.recenttracks.track.length === 0) {
+       return { isPlaying: false, track: '', artist: '', art: '', url: '', status: 'history' };
     }
+
+    const track = data.recenttracks.track[0];
 
     const isPlaying = track['@attr']?.nowplaying === 'true';
     // Get the largest image (index 3 is usually 'extralarge')

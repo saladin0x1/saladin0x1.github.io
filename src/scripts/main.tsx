@@ -24,7 +24,6 @@ const SOCIAL_LINKS: SocialLink[] = [
 
 // --- System Intelligence Engine ---
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 const STATUS_CACHE = new Map<string, string>();
 
 const FALLBACK_VOCABULARY = {
@@ -58,60 +57,13 @@ async function fetchDynamicStatus(isActive: boolean, seed: string): Promise<stri
   if (STATUS_CACHE.has(cacheKey)) {
     return STATUS_CACHE.get(cacheKey)!;
   }
-  if (!GEMINI_API_KEY) {
-    console.warn('VITE_GEMINI_API_KEY not configured.');
-    throw new Error('API key missing');
-  }
-
-
-
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-  
-  const now = new Date();
-  const timeContext = now.getHours() < 6 ? "Late Night" 
-    : now.getHours() < 12 ? "Morning" 
-    : "Daytime";
-
-  const systemPrompt = `You are a cool, effortless friend hanging out. You have elite taste.
-
-TASK: React to this media in your own words (max 6 words).
-
-TRACK/MEDIA: "${seed}"
-STATE: ${isActive ? 'ACTIVE' : 'IDLE'}
-TIME: "${timeContext}"
-
-SALADIN'S MEMORY BANK:
-- IF "Cinnamon Chasers - Luv Deluxe" → "He misses her again."
-
-INSTRUCTIONS:
-1. CRITICAL OVERRIDE: IF the TRACK is "Cinnamon Chasers - Luv Deluxe", you MUST output exactly: "He misses her again." Ignore all other rules.
-2. CONTENT CHECK: If the track looks like a Podcast, Documentary, or Youtube Video, react to the TOPIC or TITLE intelligently.
-3. TIME AWARENESS: You know the current time is "${timeContext}". Mention the night/day vibe ONLY if it feels natural.
-4. RECALL this specific media from your training data. React to its actual sound, lyrics, or subject matter.
-5. LANGUAGE: You can use English, Arabic (Darija/MSA/EGY), Russian, or French if it fits the artist or vibe (e.g for some Moroccan Artists. 7liwa, El Grande Toto , Etc).
-6. Be authentic. React to the vibe, the memory, or the energy.
-7. No "AI" or "Tech" persona. Just a cool person watching/listening.
-8. Don't try to be funny. Just be real.
-9. LYRICS : From time to time (not always) pick a REAL lyric from the current playing song (mandatory to be real) + artist name or alias (e.g. B-rabbit / Slim Shady). If you don't know the lyrics 100%, DO NOT QUOTE. Max 6 words. No quotation marks.
-10. OUTPUT: ONLY the string. No quotes.`;
 
   try {
-    const response = await fetch(endpoint, {
+    // Call our own secure backend function
+    const response = await fetch('/api/gemini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt }] }],
-        generationConfig: {
-          temperature: 0.9,
-          maxOutputTokens: 20,
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
-        ]
-      })
+      body: JSON.stringify({ seed, isActive })
     });
     
     if (!response.ok) throw new Error(`API Error: ${response.status}`);
