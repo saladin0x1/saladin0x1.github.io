@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "gif-to-svg": "^0.1.5",
+    "puppeteer": "^24.34.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-fast-marquee": "^1.6.5",
