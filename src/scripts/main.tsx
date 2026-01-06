@@ -506,7 +506,23 @@ function FrequencyWidget() {
     fetchStatus();
   }, [freq.status, freq.track, freq.artist]);
 
-  if (freq.status === 'error') return null;
+  if (freq.status === 'error') {
+    return (
+      <div className="widget-box sm frequency-widget">
+        <div className="spotify-container">
+          <div className="spotify-art-placeholder">
+            <div className="spotify-disc" style={{ opacity: 0.2 }} />
+          </div>
+          <div className="spotify-info">
+            <div className="spotify-label">FREQUENCY</div>
+            <div className="spotify-status" style={{ color: 'var(--text-ghost)' }}>
+              SIGNAL LOST / 404
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Idle mode - show offline state
   if (freq.status !== 'live') {
@@ -527,7 +543,7 @@ function FrequencyWidget() {
     );
   }
 
-  // Live mode - show current track
+  // Live mode - show current track with distinct FREQUENCY label
   return (
     <div className="widget-box sm frequency-widget">
       <a href={freq.url} target="_blank" rel="noopener noreferrer" className="spotify-container" style={{ textDecoration: 'none' }}>
@@ -535,11 +551,13 @@ function FrequencyWidget() {
           {freq.art ? <img src={freq.art} alt="Cover" /> : <div className="spotify-disc" />}
         </div>
         <div className="spotify-info spotify-info--playing">
-          <div className="spotify-label" style={{ color: 'var(--accent-green)' }}>
+          <div className="spotify-label">FREQUENCY</div>
+          <div className="spotify-title" style={{ color: 'var(--accent-green)' }}>
+            {freq.track}
+          </div>
+          <div className="spotify-status">
             <Marquee text={dynamicStatus} />
           </div>
-          <div className="spotify-title">{freq.track}</div>
-          <div className="spotify-artist">{freq.artist}</div>
         </div>
       </a>
     </div>
