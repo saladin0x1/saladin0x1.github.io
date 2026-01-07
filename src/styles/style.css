@@ -221,16 +221,16 @@ body::before {
     color: var(--text-secondary);
 }
 
-/* Spotify Widget */
-.spotify-container {
+/* Track/Music Display (Shared) */
+.track-container {
     display: flex;
     gap: 10px;
     align-items: center;
     height: 100%;
 }
 
-.spotify-art,
-.spotify-art-placeholder {
+.track-art,
+.track-art-placeholder {
     width: 40px;
     height: 40px;
     background: #0a0a0a;
@@ -241,13 +241,13 @@ body::before {
     flex-shrink: 0;
 }
 
-.spotify-art img {
+.track-art img {
     width: 100%;
     height: 100%;
     opacity: 0.8;
 }
 
-.spotify-disc {
+.track-disc {
     width: 12px;
     height: 12px;
     border: 1px solid var(--text-ghost);
@@ -255,21 +255,21 @@ body::before {
     opacity: 0.5;
 }
 
-.spotify-info {
+.track-info {
     display: flex;
     flex-direction: column;
     gap: 3px;
 }
 
-.spotify-info--playing {
+.track-info--playing {
     flex: 1;
     overflow: hidden;
     gap: 4px;
-    min-width: 0; /* Critical for flex child truncation */
+    min-width: 0;
     width: 100%;
 }
 
-.spotify-label {
+.track-label {
     font-size: 12px;
     color: var(--text-faint);
     letter-spacing: 0.5px;
@@ -278,11 +278,11 @@ body::before {
     min-width: 0;
 }
 
-.spotify-label--error {
+.track-label--error {
     color: #fff;
 }
 
-.spotify-status {
+.track-status {
     font-size: 12px;
     color: var(--text-ghost);
     white-space: nowrap;
@@ -293,11 +293,11 @@ body::before {
     mask-image: linear-gradient(to right, black 0%, black 95%, transparent 100%);
 }
 
-.spotify-status--error {
+.track-status--error {
     color: #bbb;
 }
 
-.spotify-title {
+.track-title {
     font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
@@ -305,7 +305,7 @@ body::before {
     color: #c0c0c0;
 }
 
-.spotify-artist {
+.track-artist {
     font-size: 12px;
     color: #777;
 }
