@@ -506,35 +506,16 @@ function FrequencyWidget() {
     fetchStatus();
   }, [freq.status, freq.track, freq.artist]);
 
-  if (freq.status === 'error') {
-    return (
-      <div className="widget-box sm frequency-widget">
-        <div className="spotify-container">
-          <div className="spotify-art-placeholder">
-            <div className="spotify-disc" style={{ opacity: 0.2 }} />
-          </div>
-          <div className="spotify-info">
-            <div className="spotify-label">FREQUENCY</div>
-            <div className="spotify-status" style={{ color: 'var(--text-ghost)' }}>
-              SIGNAL LOST / 404
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Idle mode - show offline state
   if (freq.status !== 'live') {
     return (
       <div className="widget-box sm frequency-widget">
-        <div className="spotify-container">
-          <div className="spotify-art-placeholder">
-            <div className="spotify-disc" />
+        <div className="track-container">
+          <div className="track-art-placeholder">
+            <div className="track-disc" />
           </div>
-          <div className="spotify-info">
-            <div className="spotify-label">FREQUENCY</div>
-            <div className="spotify-status">
+          <div className="track-info">
+            <div className="track-status">
               <Marquee text={dynamicStatus} />
             </div>
           </div>
@@ -543,21 +524,21 @@ function FrequencyWidget() {
     );
   }
 
-  // Live mode - show current track with distinct FREQUENCY label
+  // Live mode - show current track
   return (
     <div className="widget-box sm frequency-widget">
-      <a href={freq.url} target="_blank" rel="noopener noreferrer" className="spotify-container" style={{ textDecoration: 'none' }}>
-        <div className="spotify-art">
-          {freq.art ? <img src={freq.art} alt="Cover" /> : <div className="spotify-disc" />}
+      <a href={freq.url} target="_blank" rel="noopener noreferrer" className="track-container" style={{ textDecoration: 'none' }}>
+        <div className="track-art">
+          {freq.art ? <img src={freq.art} alt="Cover" /> : <div className="track-disc" />}
         </div>
-        <div className="spotify-info spotify-info--playing">
-          <div className="spotify-label">FREQUENCY</div>
-          <div className="spotify-title" style={{ color: 'var(--accent-green)' }}>
-            {freq.track}
-          </div>
-          <div className="spotify-status">
+        <div className="track-info track-info--playing">
+          <div className="track-label" style={{ color: 'var(--accent-green)' }}>
             <Marquee text={dynamicStatus} />
           </div>
+          <div className="track-title" style={{ color: 'var(--text-primary)' }}>
+            {freq.track}
+          </div>
+          <div className="track-artist">{freq.artist}</div>
         </div>
       </a>
     </div>
