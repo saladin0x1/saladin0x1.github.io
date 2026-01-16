@@ -15,7 +15,10 @@
     "wrangler": "^4.54.0"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
+    "@google/generative-ai": "^0.24.1",
     "gif-to-svg": "^0.1.5",
+    "posthog-js": "^1.324.1",
     "puppeteer": "^24.34.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

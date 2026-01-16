@@ -1,9 +1,24 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import ReactDOM from 'react-dom/client';
-import { FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa';
+import { FaInstagram, FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { getNowPlaying, SpotifyCurrentlyPlaying } from './spotify';
 import { getFrequency, FrequencyState } from './lastfm';
+import posthog from 'posthog-js';
+
+// --- PostHog Analytics ---
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
+
+if (POSTHOG_KEY && typeof window !== 'undefined') {
+  posthog.init(POSTHOG_KEY, {
+    api_host: POSTHOG_HOST,
+    persistence: 'localStorage',
+    capture_pageview: true,
+    capture_pageleave: true,
+    autocapture: false,
+  });
+}
 
 // --- Constants ---
 const BIRTHDAY = new Date('2003-09-29T00:00:00');
@@ -14,12 +29,14 @@ interface SocialLink {
   label: string;
   url: string;
   icon: React.ComponentType;
+  doubleWidth?: boolean;
 }
 const SOCIAL_LINKS: SocialLink[] = [
   { label: 'INSTA', url: 'https://instagram.com/selouali01', icon: FaInstagram },
   { label: 'X', url: 'https://x.com/selouali01', icon: FaXTwitter },
   { label: 'LINKEDIN', url: 'https://linkedin.com/in/saladin0x1', icon: FaLinkedin },
   { label: 'GITHUB', url: 'https://github.com/saladin0x1', icon: FaGithub },
+  { label: 'MAIL', url: 'mailto:me@saladin.su', icon: FaEnvelope, doubleWidth: true },
 ];
 
 // --- System Intelligence Engine ---
@@ -556,26 +573,58 @@ const NavWidget = memo(function NavWidget() {
   );
 });
 
-const SocialGrid = memo(function SocialGrid() {
+const EmailModal = memo(function EmailModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null;
+
   return (
-    <div className="widget-box social-widget">
-      <div className="btn-grid">
-        {SOCIAL_LINKS.map((social, index) => (
-          <a
-            key={index}
-            href={social.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-link"
-          >
-            <div className="btn-sq">
-              <social.icon />
-              <span>{social.label}</span>
-            </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">SELECT EMAIL TYPE</div>
+        <div className="modal-options">
+          <a href="mailto:me@saladin.su" className="modal-option">
+            <div className="modal-option-label">PERSONAL</div>
+            <div className="modal-option-value">me@saladin.su</div>
           </a>
-        ))}
+          <a href="mailto:salaheddine.elouali@emsi-edu.ma" className="modal-option">
+            <div className="modal-option-label">ACADEMIC</div>
+            <div className="modal-option-value">salaheddine.elouali@emsi-edu.ma</div>
+          </a>
+        </div>
       </div>
     </div>
+  );
+});
+
+const SocialGrid = memo(function SocialGrid() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  return (
+    <>
+      <div className="widget-box social-widget">
+        <div className="btn-grid">
+          {SOCIAL_LINKS.map((social, index) => {
+            const isMail = social.label === 'MAIL';
+            return (
+              <a
+                key={index}
+                href={isMail ? undefined : social.url}
+                target={isMail ? undefined : '_blank'}
+                rel="noopener noreferrer"
+                className="social-link"
+                style={social.doubleWidth ? { gridColumn: 'span 2' } : undefined}
+                onClick={isMail ? (e) => { e.preventDefault(); setIsModalOpen(true); } : undefined}
+              >
+                <div className="btn-sq">
+                  <social.icon />
+                  <span>{social.label}</span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+      <EmailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </>
   );
 });
 
