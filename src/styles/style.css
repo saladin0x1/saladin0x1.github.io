@@ -158,6 +158,19 @@ body::before {
     transition: color 0.3s ease;
 }
 
+/* Reading Corner */
+.reading-corner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 420px;
+}
+
+.rc-svg {
+    width: 100%;
+    height: 100%;
+}
+
 /* Right Column */
 .right-col {
     display: flex;
@@ -602,5 +615,14 @@ body::before {
     .dash-line {
         font-size: 12px;
         width: 100%;
+    }
+
+    .reading-corner {
+        height: 200px;
+    }
+
+    .rc-svg {
+        width: 100%;
+        height: 100%;
     }
 }
