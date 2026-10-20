@@ -15,12 +15,30 @@ const ENDPOINT = (accountId: string) =>
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+    },
   });
+}
+
+function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get('Origin');
+  if (!origin) return false;
+
+  try {
+    return new URL(origin).origin === new URL(request.url).origin;
+  } catch {
+    return false;
+  }
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
+
+  if (!isSameOrigin(request)) {
+    return json({ error: 'forbidden origin' }, 403);
+  }
 
   if (!env.CF_ACCOUNT_ID || !env.CF_AI_TOKEN) {
     return json({ error: 'Workers AI not configured' }, 500);
