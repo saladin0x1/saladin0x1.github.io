@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 
-// Dev-server parity with Cloudflare Pages _redirects:
-// /cat (and /cat/) must serve the cat page, not the SPA fallback.
+// Dev-server parity with Cloudflare Pages' static directory route:
+// /cat (and /cat/) must serve cat/index.html, not the SPA fallback.
 // configureServer installs this middleware BEFORE Vite's SPA fallback.
 function catRoute(): Plugin {
   return {
@@ -9,7 +9,7 @@ function catRoute(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         if (req.url === '/cat' || req.url === '/cat/') {
-          req.url = '/cat.html';
+          req.url = '/cat/index.html';
         }
         next();
       });

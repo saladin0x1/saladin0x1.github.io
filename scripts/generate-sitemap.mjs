@@ -4,7 +4,7 @@ import path from 'node:path';
 const origin = 'https://saladin.su';
 const publicDir = path.resolve('public');
 const articleDir = path.join(publicDir, 'articles');
-const urls = ['/', '/cat'];
+const urls = ['/', '/cat/'];
 
 function walk(directory) {
   if (!fs.existsSync(directory)) return [];

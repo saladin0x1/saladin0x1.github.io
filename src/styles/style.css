@@ -73,7 +73,8 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 30px;
-    overflow: hidden;
+    min-width: 0;
+    overflow: visible;
 }
 
 /* Profile Section */

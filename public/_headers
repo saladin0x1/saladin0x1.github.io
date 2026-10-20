@@ -31,7 +31,7 @@
 /index.html
   Cache-Control: no-cache
 
-/cat
+/cat/
   Cache-Control: no-cache
 
 /cat.html

@@ -1,7 +1,7 @@
-# Canonical cat page
-/cat.html /cat 301
-/cat/index.html /cat 301
-/cat /cat.html 200
+# Canonical cat page: the directory owns the content, aliases redirect once.
+/cat /cat/ 301
+/cat.html /cat/ 301
+/cat/index.html /cat/ 301
 
-# Deliberately no wildcard SPA fallback: unknown URLs must return a real 404.
+# Deliberately no wildcard SPA fallback. public/404.html provides a real 404.
 # Future articles should be emitted as static /articles/<slug>/index.html pages.
