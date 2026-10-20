@@ -10,6 +10,10 @@ Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests ce
 - [Shadow Cat](https://saladin.su/cat/): Standalone interactive animation created for the site.
 - [Sitemap](https://saladin.su/sitemap.xml): Machine-readable index of public pages.
 
+## Writing
+
+- [CleanseMeMaybe — Craft CMS RCE via condition.config](https://saladin.su/articles/cleanse-me-maybe/): How a JSON string walked past Craft CMS's config sanitizer. CVE-2026-78416, CVSS 8.8, fixed in Craft CMS 5.10.6 / 4.18.2.
+
 ## Verified Profiles
 
 - [GitHub](https://github.com/saladin0x1): Public code and security projects.

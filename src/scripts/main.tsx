@@ -183,12 +183,30 @@ const DashContainer = memo(function DashContainer({ lines, className = '' }: Das
 //   { name: 'bobbi-the-watchdog', detail: 'Infrastructure watchdog automation', meta: 'PY 2025', url: 'https://github.com/saladin0x1/bobbi-the-watchdog' },
 // ];
 
+const ARTICLES = [
+  {
+    index: '01',
+    name: 'CleanseMeMaybe',
+    meta: 'CVE-2026-78416 · RCE',
+    url: '/articles/cleanse-me-maybe/',
+  },
+];
+
 const SelectedWork = memo(function SelectedWork() {
   return (
     <section className="content-block work-block" aria-labelledby="blogs-heading">
       <div className="work-wrapper">
         <h2 className="work-header" id="blogs-heading">BLOGS</h2>
-        {/* empty for now — statically generated article links land here later */}
+        {ARTICLES.map((article) => (
+          <a key={article.url} className="work-row" href={article.url} aria-label={`Read article: ${article.name}`}>
+            <div className="work-line">
+              <span className="work-index">{article.index}</span>
+              <span className="work-name">{article.name}</span>
+              <span className="work-leader"></span>
+              <span className="work-meta">{article.meta}</span>
+            </div>
+          </a>
+        ))}
       </div>
     </section>
   );

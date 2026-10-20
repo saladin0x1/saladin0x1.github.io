@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>CleanseMeMaybe — Craft CMS RCE via condition.config | saladin.su</title>
+  <meta name="description" content="How a JSON string walked past Craft CMS's config sanitizer: an authenticated RCE, the PHP gadget chain behind it, and the disclosure that almost wasn't. CVE-2026-78416.">
+  <meta name="author" content="Salah-Eddine Elouali">
+  <link rel="canonical" href="https://saladin.su/articles/cleanse-me-maybe/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://saladin.su/articles/cleanse-me-maybe/">
+  <meta property="og:title" content="CleanseMeMaybe — Craft CMS RCE via condition.config">
+  <meta property="og:description" content="An authenticated RCE found by hiding a payload in the one shape the sanitizer never inspected. CVE-2026-78416.">
+  <meta property="og:image" content="https://saladin.su/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="CleanseMeMaybe — Craft CMS RCE via condition.config">
+  <meta name="twitter:description" content="An authenticated RCE found by hiding a payload in the one shape the sanitizer never inspected. CVE-2026-78416.">
+  <link rel="preload" href="/fonts/space-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  (function(){
+    var boot=function(){ posthog.init('phc_wsYCAzHQBnBMUgHhE3LRDva4bZd11F5nFrwJDp6o51L',{api_host:'https://eu.i.posthog.com'}); };
+    if('requestIdleCallback' in window){ requestIdleCallback(boot,{timeout:3000}); } else { window.addEventListener('load',boot); }
+  })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "CleanseMeMaybe — Craft CMS RCE via condition.config",
+    "description": "How a JSON string walked past Craft CMS's config sanitizer: an authenticated RCE, the PHP gadget chain behind it, and the disclosure that almost wasn't. CVE-2026-78416.",
+    "datePublished": "2026-10-20",
+    "author": {
+      "@type": "Person",
+      "name": "Salah-Eddine Elouali",
+      "url": "https://saladin.su/",
+      "sameAs": [
+        "https://github.com/saladin0x1",
+        "https://hackerone.com/saladin0x1",
+        "https://linkedin.com/in/saladin0x1"
+      ]
+    },
+    "mainEntityOfPage": "https://saladin.su/articles/cleanse-me-maybe/",
+    "publisher": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" }
+  }
+  </script>
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: #000; }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: #c9c9c9;
+      font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: url('/noise.png') repeat;
+      opacity: 0.035;
+    }
+
+    a { color: #9a9a9a; text-decoration-color: #3a3a3a; text-underline-offset: 5px; transition: color .2s ease, text-decoration-color .2s ease; }
+    a:hover, a:focus-visible { color: #fff; text-decoration-color: #9a9a9a; outline: none; }
+
+    .back {
+      position: fixed;
+      top: 26px;
+      left: clamp(20px, 5vw, 56px);
+      z-index: 10;
+      font-size: 12px;
+      letter-spacing: .1em;
+      text-decoration: none;
+      color: #666;
+    }
+    .back:hover { color: #d8d8d8; }
+
+    article {
+      max-width: 74ch;
+      margin: 0 auto;
+      padding: clamp(90px, 14vh, 150px) clamp(22px, 6vw, 40px) 90px;
+    }
+
+    .eyebrow {
+      margin: 0 0 26px;
+      color: #666;
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: #e6e6e6;
+      font-size: clamp(34px, 5.5vw, 56px);
+      font-weight: 400;
+      letter-spacing: -.04em;
+      line-height: 1.05;
+    }
+
+    .dek {
+      margin: 22px 0 0;
+      max-width: 52ch;
+      color: #8f8f8f;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 26px;
+      margin: 34px 0 0;
+      padding: 18px 0;
+      border-top: 1px solid rgba(255,255,255,.09);
+      border-bottom: 1px solid rgba(255,255,255,.09);
+      color: #6f6f6f;
+      font-size: 11.5px;
+      letter-spacing: .06em;
+    }
+
+    .tldr {
+      margin: 44px 0 0;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.015);
+    }
+    .tldr h2 { margin: 0 0 14px; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .tldr ul { margin: 0; padding: 0; list-style: none; }
+    .tldr li { position: relative; padding: 5px 0 5px 20px; color: #a8a8a8; font-size: 13.5px; line-height: 1.65; }
+    .tldr li::before { content: '·'; position: absolute; left: 4px; color: #555; }
+
+    h2 {
+      margin: 72px 0 0;
+      color: #dcdcdc;
+      font-size: 21px;
+      font-weight: 400;
+      letter-spacing: -.02em;
+    }
+    h2 .no { color: #4a4a4a; margin-right: 14px; }
+
+    p { margin: 20px 0 0; }
+
+    pre {
+      margin: 26px 0 0;
+      padding: 18px 20px;
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 2px solid rgba(255,255,255,.22);
+      background: #070707;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #b5b5b5;
+    }
+    code { font-family: inherit; }
+    p code, li code, td code { color: #d0d0d0; font-size: .92em; }
+
+    .flow {
+      margin: 26px 0 0;
+      padding: 18px 20px;
+      border: 1px dashed rgba(255,255,255,.14);
+      color: #a0a0a0;
+      font-size: 12.5px;
+      line-height: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .proof {
+      margin: 26px 0 0;
+      padding: 18px 20px;
+      border: 1px solid rgba(255,255,255,.08);
+      color: #9f9f9f;
+      font-size: 12.5px;
+      line-height: 1.8;
+    }
+    .proof .out { color: #e0e0e0; }
+
+    table {
+      width: 100%;
+      margin: 26px 0 0;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    td { padding: 9px 12px 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
+    td:first-child { white-space: nowrap; color: #7d7d7d; }
+
+    blockquote {
+      margin: 30px 0 0;
+      padding-left: 20px;
+      border-left: 2px solid rgba(255,255,255,.2);
+      color: #8d8d8d;
+      font-style: normal;
+    }
+
+    .closing {
+      margin: 72px 0 0;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255,255,255,.09);
+      color: #8d8d8d;
+    }
+    .closing em { color: #cfcfcf; font-style: normal; }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 28px;
+      margin: 56px 0 0;
+      padding: 22px 0 0;
+      border-top: 1px solid rgba(255,255,255,.09);
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+
+    @media (max-width: 600px) {
+      body { font-size: 14px; }
+      table { font-size: 12px; }
+      td:first-child { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← saladin.su</a>
+  <article>
+    <p class="eyebrow">Security Research — CVE-2026-78416 — CVSS 8.8 High</p>
+    <h1>CleanseMeMaybe</h1>
+    <p class="dek">An authenticated RCE in Craft CMS, found by hiding a payload in the one shape the sanitizer never inspected.</p>
+    <div class="meta">
+      <span>Salah-Eddine Elouali</span>
+      <span>October 20, 2026</span>
+      <span>~9 min read</span>
+    </div>
+
+    <div class="tldr">
+      <h2>The short version</h2>
+      <ul>
+        <li>Craft CMS before <code>5.10.6</code> and <code>4.18.2</code> — authenticated RCE, any CP user with <code>accessCp</code></li>
+        <li>The patch for CVE-2026-33157 stripped dangerous Yii config keys — but only from array keys</li>
+        <li><code>condition.config</code> is a JSON <em>string</em>: decoded and merged back <em>after</em> the cleanse</li>
+        <li>Decoded <code>as</code>/<code>on</code> keys reach <code>Craft::createObject()</code> → Yii behavior/event injection → <code>shell_exec()</code></li>
+        <li>Fixed in 5.10.6 / 4.18.2 (2026-06-16) — <a href="https://github.com/advisories/GHSA-4ghj-75g5-h9pf">GHSA-4ghj-75g5-h9pf</a></li>
+      </ul>
+    </div>
+
+    <h2><span class="no">01</span>How you end up here</h2>
+    <p>I got into PHP gadget chains the way most people get into bad habits: slowly, then all at once. It started with Magento bug bounty work — file upload bypasses, extension validation — but somewhere along the way I stopped caring about the specific vulnerabilities and started caring about the language itself. PHP is everywhere, complex, and full of object-oriented magic most people never look at closely.</p>
+    <p>A gadget chain is what happens when you connect that magic. A class that does something boring — typecasting attributes — happens to call a method on another class, which happens to call another method, and three or four hops later you're at <code>shell_exec()</code> with attacker-controlled input. None of the intermediate classes were designed to be dangerous. They just connect.</p>
+    <p>Every big framework has its own flavor. Laravel has its famous <code>__destruct()</code> chains, Symfony has PropertyAccessor, Drupal has render arrays. Yii2 — which powers Craft CMS — has a particularly elegant one: config arrays with special keys. When an object is created through <code>Yii::createObject()</code>, the framework interprets two key prefixes:</p>
+    <pre><code>as name   → attach a behavior to the object
+on event  → register an event handler</code></pre>
+    <p>This is a feature. But if an attacker controls that config array, they can attach arbitrary behaviors and register arbitrary handlers. The gadget writes itself.</p>
+
+    <h2><span class="no">02</span>The patch you don't trust</h2>
+    <p>Someone had already reported direct <code>as</code>/<code>on</code> injection into Craft's condition arrays. Craft 5.10.1 shipped the fix for CVE-2026-33157: <code>Component::cleanseConfig()</code>, a sanitizer that walks the config array and strips any key starting with <code>as&nbsp;</code> or <code>on&nbsp;</code>.</p>
+    <p>I downloaded 5.10.1 to test the patch. Because that's what you do. You don't trust patches. You verify them.</p>
+    <p>I traced the code and confirmed it with a canary — a non-executing payload pointing to a class that doesn't exist. Direct array keys: stripped, gone. Good patch.</p>
+    <p>But then I saw this, in <code>Conditions::createCondition()</code>:</p>
+    <pre><code>// The base config will be JSON-encoded within a `config` key if this
+// came from a condition builder
+if (isset($config['config']) &amp;&amp; Json::isJsonObject($config['config'])) {
+    $config = array_merge(
+        Json::decode(ArrayHelper::remove($config, 'config')),  // ← decoded AFTER cleanse
+        $config
+    );
+}
+
+// ...
+return Craft::createObject([   // ← attacker-controlled config reaches Yii
+    'class' =&gt; $class,
+    'attributes' =&gt; $config,
+    'conditionRules' =&gt; $rules,
+]);</code></pre>
+    <p>The condition array has a field called <code>config</code>. Not a sub-array — a JSON string. And the sanitize that ran upstream only checks array keys:</p>
+    <pre><code>public static function cleanseConfig(array $config): array
+{
+    foreach ($config as $key =&gt; $value) {
+        if (is_string($key) &amp;&amp; (str_starts_with($key, 'on ') || str_starts_with($key, 'as '))) {
+            unset($config[$key]);
+            continue;
+        }
+        if (is_array($value)) {
+            $config[$key] = static::cleanseConfig($value);
+        }
+    }
+    return $config;
+}</code></pre>
+    <p>It finds <code>as something</code> keys and removes them. But <code>config</code> is just <code>config</code>. Its value is a string. The cleanse doesn't parse JSON. It sees a normal string and moves on.</p>
+
+    <h2><span class="no">03</span>The blind spot</h2>
+    <p>You don't bypass this sanitizer with encoding tricks or unicode magic. You just put the payload in a format the sanitizer doesn't inspect. It's like a security guard who checks your backpack but not your jacket, because the policy says <em>check backpacks</em>.</p>
+    <p>The JSON can contain anything — including the exact <code>as rce</code> and <code>on *</code> keys the sanitize was designed to remove. It gets decoded and merged back in <em>after</em> the boundary. Without re-cleansing.</p>
+    <p>It was 3AM. I laughed so hard my cat left the room.</p>
+    <p>I rebuilt the canary for the JSON variant. Direct array version: stripped, working as intended. JSON-smuggled version: Yii threw <em>class not found</em> — meaning my nonexistent behavior class had reached the framework's object hydration. The bypass was confirmed before a single line of exploit code existed.</p>
+
+    <h2><span class="no">04</span>Four boring classes</h2>
+    <p>The chain itself is almost boring, which is the point:</p>
+    <div class="flow">as rce
+  → yii\behaviors\AttributeTypecastBehavior     (typecasts attributes; boring)
+    → Psy\Readline\Hoa\ConsoleProcessus::execute()  (psy/psysh ships with Craft)
+      → shell_exec()                                 (someone has to do it)</div>
+    <p>Four classes. None of them meant to be exploitable. All of them just doing their job, connected by PHP's magic method dispatch.</p>
+    <p>The one wrinkle: the executor pipes through <code>escapeshellcmd()</code>, so <code>&gt;</code>, <code>|</code>, <code>;</code> and friends are escaped — no shell redirection. But <code>/usr/bin/script -q -c id /path/to/webroot/output.txt</code> works fine. <code>script</code> is a real binary that records a command's output to a file. No metacharacters. Just a command and an output file.</p>
+
+    <h2><span class="no">05</span>HTTP 200</h2>
+    <p>The trigger is a single authenticated POST to the element-search endpoint, with the payload JSON inside <code>condition.config</code>. The response is perfectly normal:</p>
+    <div class="proof">POST /admin/actions/element-search/search
+HTTP/2 200 OK
+{"elements":[],"exactMatch":false}
+
+GET /craft_burp_id.txt
+<span class="out">uid=501(user) gid=20(dialout) groups=20(dialout)</span></div>
+    <p>Command execution as the web user. From a non-admin Control Panel session. Through a JSON string the framework's own sanitizer was supposed to clean. Semi-blind by design — the trigger returns a normal response, and the proof is a server-side side effect read back in a second request. No callbacks, no collaborator, no reverse shell.</p>
+
+    <h2><span class="no">06</span>The part nobody writes about</h2>
+    <p>I reported it to the Craft CMS VDP on May 19, 2026 — four days after 5.10.1 shipped. Full source references, both Burp requests, differential proof of the bypass.</p>
+    <p>On May 26 it was closed as a duplicate of an earlier report. No technical explanation. No comparison. Just "submitted previously by another researcher."</p>
+    <p>I asked whether that report specifically included this variant — the <code>condition.config</code> JSON, decoded after the cleanse, in 5.10.1. No response. I asked again. Filed mediation. Silence.</p>
+    <p>So I checked the git history myself: four releases since 5.10.1, zero changes to any file in the vulnerable path. The bug was still there. Still exploitable. Latest release.</p>
+    <p>Then I sent a formal review request. Not a threat — a request for one sentence of technical justification: either the earlier report described this bypass, or it didn't.</p>
+    <p><em>June 1.</em> Reopened. Accepted.</p>
+    <p><em>June 2, 8:09 PM.</em> brandonkelly, Craft's lead developer: "Fixed for the next release via 353b5d67."</p>
+
+    <table aria-label="Disclosure timeline">
+      <thead><tr><th>Date</th><th>Event</th></tr></thead>
+      <tbody>
+        <tr><td>2026-05-15</td><td>Craft 5.10.1 ships (CVE-2026-33157 patch)</td></tr>
+        <tr><td>2026-05-19</td><td>Report #1366 submitted — 4 days after release</td></tr>
+        <tr><td>2026-05-21</td><td>Acknowledged</td></tr>
+        <tr><td>2026-05-26</td><td>Closed as duplicate — no technical explanation</td></tr>
+        <tr><td>2026-05-30</td><td>Formal review request sent</td></tr>
+        <tr><td>2026-06-01</td><td>Reopened → Accepted</td></tr>
+        <tr><td>2026-06-02</td><td>Fixed on 5.x (353b5d67)</td></tr>
+        <tr><td>2026-06-10</td><td>Fixed on 4.x (789789dc)</td></tr>
+        <tr><td>2026-06-16</td><td>Craft 5.10.6 &amp; 4.18.2 released with the fix</td></tr>
+        <tr><td>2026-06-19</td><td>Report resolved</td></tr>
+        <tr><td>2026-08-24</td><td>CVE-2026-78416 published — CVSS 8.8 High</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="no">07</span>The fix</h2>
+    <p>The fix is exactly what you'd hope for. The decoded JSON goes back through the cleanse before it's merged:</p>
+    <pre><code>$config = array_merge(
+    ComponentHelper::cleanseConfig(Json::decode(ArrayHelper::remove($config, 'config'))),
+    $config
+);</code></pre>
+    <p>The jacket gets checked too, now.</p>
+
+    <h2><span class="no">08</span>What I keep</h2>
+    <p>I started this journey fascinated by how PHP objects connect — how magic methods create invisible wires between classes, how a typecaster leads to a process executor leads to a shell. I found a real RCE by understanding those wires better than the people who wrote them.</p>
+    <p>Then I learned that sometimes the hardest part isn't finding the bug. It's getting someone to read the report.</p>
+    <p>And then the last lesson: the disclosure process has invisible wires too, and sometimes you have to pull them yourself. Politely. In writing. With timestamps.</p>
+    <p>The code doesn't lie. The git history doesn't lie. And <code>uid=501(user)</code> in my webroot doesn't lie.</p>
+
+    <p class="closing"><em>CleanseMeMaybe.</em> Because sometimes the sanitize function is just a suggestion. And sometimes you have to run it twice.</p>
+
+    <nav class="links" aria-label="References">
+      <a href="https://github.com/saladin0x1/CleanseMeMaybe">PoC &amp; evidence</a>
+      <a href="https://github.com/advisories/GHSA-4ghj-75g5-h9pf">GHSA-4ghj-75g5-h9pf</a>
+      <a href="https://github.com/craftcms/cms/commit/353b5d676c88a854c9f6409ad83b837ca0c0e8da">Fix commit 353b5d67</a>
+      <a href="https://github.com/craftcms/cms/releases/tag/5.10.6">Craft 5.10.6</a>
+      <a href="/">saladin.su</a>
+    </nav>
+  </article>
+  <!-- Cloudflare Web Analytics -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3172d3151b5647eda6e971e2b390e66c"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+</body>
+</html>
