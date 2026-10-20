@@ -1,2 +1,7 @@
-# SPA routing - redirect all routes to index.html
-/* /index.html 200
+# Canonical cat page
+/cat.html /cat 301
+/cat/index.html /cat 301
+/cat /cat.html 200
+
+# Deliberately no wildcard SPA fallback: unknown URLs must return a real 404.
+# Future articles should be emitted as static /articles/<slug>/index.html pages.

@@ -13,3 +13,5 @@ GEMINI.md
 package-lock.json
 capture.js
 .vscode/
+.dev.vars
+.wrangler/

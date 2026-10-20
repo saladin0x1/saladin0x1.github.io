@@ -1,7 +1,15 @@
+@font-face {
+    font-family: 'Space Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+}
+
 :root {
     --bg: #000000;
     --wire: rgba(255, 255, 255, 0.1);
-    --font-mono: 'Space Mono', monospace;
+    --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --text-primary: #e0e0e0;
     --text-secondary: #d0d0d0;
     --text-muted: #999;
@@ -38,10 +46,16 @@ body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48ZmlsdGVyIGlkPSJub2lzZSIgeD0iMCIgeT0iMCI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48ZmVCbGVuZCBtb2RlPSJzY3JlZW4iLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+');
+    background: url('/noise.png') repeat;
     opacity: 0.04;
     pointer-events: none;
     z-index: 100;
+}
+
+/* Full-width mount: #root is a flex item of <body> and would otherwise
+   shrink-to-fit its content (the old dash filler masked this). */
+#root {
+    width: 100%;
 }
 
 /* Layout */
@@ -52,7 +66,6 @@ body::before {
     width: 100%;
     max-width: 100%;
     overflow: hidden;
-    transition: all 0.3s ease;
 }
 
 /* Left Column */
@@ -79,7 +92,7 @@ body::before {
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .avatar-sq:hover {
@@ -89,6 +102,20 @@ body::before {
 }
 
 /* Bio Styles */
+.bio-name {
+    color: var(--text-primary);
+    font-size: 18px;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+}
+
+.bio-role {
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
 .bio-lines {
     flex: 1;
     display: flex;
@@ -127,7 +154,8 @@ body::before {
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
-    transition: all 0.3s ease;
+    contain: layout paint;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .content-block:hover {
@@ -156,6 +184,79 @@ body::before {
     overflow: hidden;
     white-space: nowrap;
     transition: color 0.3s ease;
+}
+
+/* Selected Work */
+.work-block {
+    height: auto;
+}
+
+.work-wrapper {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.work-header {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.work-row {
+    display: block;
+    text-decoration: none;
+}
+
+.work-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.work-index {
+    color: var(--text-ghost);
+    font-size: 12px;
+    transition: color 0.2s ease;
+}
+
+.work-name {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.work-leader {
+    flex: 1;
+    min-width: 20px;
+    border-bottom: 1px dotted var(--text-ghost);
+    transform: translateY(-3px);
+}
+
+.work-meta {
+    color: var(--text-faint);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.work-detail {
+    display: block;
+    margin-top: 3px;
+    padding-left: 38px;
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+.work-row:hover .work-index {
+    color: var(--accent-green);
+}
+
+.work-row:hover .work-name {
+    color: #fff;
 }
 
 /* Reading Corner */
@@ -188,7 +289,8 @@ body::before {
         linear-gradient(rgba(255,255,255,0.05) 0.5px, transparent 0.5px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 0.5px, transparent 0.5px);
     background-size: 10px 10px;
-    transition: all 0.3s ease;
+    contain: layout paint;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     /* Strict containment */
     overflow: hidden;
     min-width: 0;
@@ -507,8 +609,9 @@ body::before {
         width: 100%;
     }
 
-    /* 4. Spotify */
-    .spotify-widget {
+    /* 4. Reserved slot (old Spotify box) — integer renumber, order: 3.5
+       is invalid CSS (order takes integers) and silently drops to 0 */
+    .reserved-widget {
         order: 4;
         width: 100%;
     }
@@ -533,6 +636,14 @@ body::before {
         overflow: hidden;
     }
 
+    .work-block {
+        height: auto;
+    }
+
+    .work-detail {
+        padding-left: 0;
+    }
+
     /* 8. Bottom filler */
     .bottom-filler {
         order: 8;
@@ -540,9 +651,8 @@ body::before {
         min-height: 150px;
     }
 
-    /* 8. Footer */
     .footer {
-        order: 99;
+        order: 9;
         width: 100%;
         text-align: center;
         margin-top: 10px;
@@ -562,6 +672,11 @@ body::before {
         text-align: center;
     }
 
+    .bio-name {
+        font-size: 16px;
+    }
+
+    .bio-role,
     .bio-quote,
     .bio-heading,
     .bio-text {
@@ -582,16 +697,6 @@ body::before {
 
     .status-row {
         font-size: 11px;
-    }
-
-    .spotify-label,
-    .spotify-status,
-    .spotify-artist {
-        font-size: 11px;
-    }
-
-    .spotify-title {
-        font-size: 12px;
     }
 
     .nav-item {

@@ -2,110 +2,32 @@ import React, { useState, useEffect, useMemo, memo } from 'react';
 import ReactDOM from 'react-dom/client';
 import { FaInstagram, FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
-// import { getNowPlaying } from './spotify';
+import { SiHackerone } from 'react-icons/si';
 import { getFrequency, FrequencyState } from './lastfm';
-import posthog from 'posthog-js';
+import { initAnalytics } from './analytics';
 
-// --- PostHog Analytics ---
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
-
-if (POSTHOG_KEY && typeof window !== 'undefined') {
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    persistence: 'localStorage',
-    capture_pageview: true,
-    capture_pageleave: true,
-    autocapture: false,
-  });
-}
+// Analytics is split from the startup bundle and loaded during browser idle.
+initAnalytics();
 
 // --- Constants ---
 const BIRTHDAY = new Date('2003-09-29T00:00:00');
-const SPOTIFY_POLL_INTERVAL = 10000;
-const FREQUENCY_POLL_INTERVAL = 7500; // Poll Last.fm every 15s
+const FREQUENCY_POLL_INTERVAL = 15000; // Responsive enough for scrobbles; halves background traffic
 
 interface SocialLink {
   label: string;
   url: string;
   icon: React.ComponentType;
-  doubleWidth?: boolean;
 }
 const SOCIAL_LINKS: SocialLink[] = [
-  { label: 'INSTA', url: 'https://instagram.com/selouali01', icon: FaInstagram },
-  { label: 'X', url: 'https://x.com/selouali01', icon: FaXTwitter },
   { label: 'LINKEDIN', url: 'https://linkedin.com/in/saladin0x1', icon: FaLinkedin },
   { label: 'GITHUB', url: 'https://github.com/saladin0x1', icon: FaGithub },
-  { label: 'MAIL', url: 'mailto:me@saladin.su', icon: FaEnvelope, doubleWidth: true },
+  { label: 'HACKERONE', url: 'https://hackerone.com/saladin0x1', icon: SiHackerone },
+  { label: 'MAIL', url: 'mailto:me@saladin.su', icon: FaEnvelope },
+  { label: 'INSTA', url: 'https://instagram.com/selouali01', icon: FaInstagram },
+  { label: 'X', url: 'https://x.com/selouali01', icon: FaXTwitter },
 ];
 
-// --- System Intelligence Engine ---
-
-const STATUS_CACHE = new Map<string, string>();
-
-const FALLBACK_VOCABULARY = {
-  active: [
-    'Resonating with frequencies.',
-    'I/O stream synchronized.',
-    'Processing transient data.',
-    'Thread status: Occupied.',
-    'Allocating heap to sound.',
-    'Feeding the entropy pool.',
-    'Ingesting frequency.',
-    'Active process: In-situ.',
-  ],
-  idle: [
-    'Awaiting interrupt.',
-    'Silence is the default.',
-    'Standby. Signal lost.',
-    'Entropy decaying.',
-    'Standard input: Null.',
-    'Monitoring the void.',
-    'Cache warm. Pipe broken.',
-    'Dormant state.',
-  ],
-};
-
-
-
-
-async function fetchDynamicStatus(isActive: boolean, seed: string): Promise<string> {
-
-  const cacheKey = `${isActive ? 'active' : 'idle'}:${seed}`;
-  if (STATUS_CACHE.has(cacheKey)) {
-    return STATUS_CACHE.get(cacheKey)!;
-  }
-
-  try {
-    // Call our own secure backend function
-    const response = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seed, isActive })
-    });
-    
-    if (!response.ok) throw new Error(`API Error: ${response.status}`);
-    
-    const result = await response.json();
-    const output = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    
-    if (output) {
-      STATUS_CACHE.set(cacheKey, output);
-      return output;
-    }
-    throw new Error('Empty response (Safety or Model Error)');
-
-  } catch (error) {
-    console.warn(` Fallback engaged: ${error}`);
-    const collection = isActive ? FALLBACK_VOCABULARY.active : FALLBACK_VOCABULARY.idle;
-    let hash = 0;
-    for (let i = 0; i < seed.length; i++) {
-      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % collection.length;
-    return collection[index];
-  }
-}
+// Status generation lives in soul.ts (corpus + lyrics + ghost markov).
 
 // --- Hooks ---
 
@@ -132,86 +54,6 @@ function useUptime(birthDate: Date): string {
   }, [birthDate]);
 
   return uptime;
-}
-
-interface SpotifyState {
-  isPlaying: boolean;
-  title: string;
-  artist: string;
-  albumArt: string;
-  status: 'playing' | 'offline' | 'error';
-}
-
-function useSpotify(_pollInterval: number): SpotifyState {
-  // TODO: Uncomment when Spotify API is back
-  const [state, _setState] = useState<SpotifyState>({
-    isPlaying: false,
-    title: '',
-    artist: '',
-    albumArt: '',
-    status: 'error', // Default to error while Spotify is down
-  });
-
-  // useEffect(() => {
-  //   let isMounted = true;
-  //   let intervalId: number | undefined;
-
-  //   const fetchStatus = async () => {
-  //     if (document.visibilityState === 'hidden') return;
-
-  //     const response = await getNowPlaying();
-
-  //     if (!isMounted) return;
-
-  //     if (response.status === 401 || response.status >= 500) {
-  //       setState(prev => ({ ...prev, status: 'error', isPlaying: false }));
-  //       if (intervalId) {
-  //         clearInterval(intervalId);
-  //         intervalId = undefined;
-  //       }
-  //       return;
-  //     }
-
-  //     if (!response.data || !response.data.is_playing || !response.data.item) {
-  //       setState(prev => ({ ...prev, status: 'offline', isPlaying: false }));
-  //       return;
-  //     }
-
-  //     const { item } = response.data;
-  //     setState({
-  //       isPlaying: true,
-  //       title: item.name,
-  //       artist: item.artists.map(a => a.name).join(', '),
-  //       albumArt: item.album.images[0]?.url || '',
-  //       status: 'playing',
-  //     });
-  //   };
-
-  //   fetchStatus();
-  //   intervalId = window.setInterval(fetchStatus, pollInterval);
-
-  //   // Listen for visibility changes to pause/resume polling
-  //   const handleVisibilityChange = () => {
-  //     if (document.visibilityState === 'visible') {
-  //       fetchStatus();
-  //       if (!intervalId) {
-  //         intervalId = window.setInterval(fetchStatus, pollInterval);
-  //       }
-  //     }
-  //     // Note: We don't strictly need to clear interval on hidden,
-  //     // but the fetch guard handles the 'hidden' case.
-  //   };
-
-  //   document.addEventListener('visibilitychange', handleVisibilityChange);
-
-  //   return () => {
-  //     isMounted = false;
-  //     if (intervalId) clearInterval(intervalId);
-  //     document.removeEventListener('visibilitychange', handleVisibilityChange);
-  //   };
-  // }, [pollInterval]);
-
-  return state;
 }
 
 function useFrequency(pollInterval: number): FrequencyState {
@@ -262,7 +104,7 @@ function useFrequency(pollInterval: number): FrequencyState {
 const Avatar = memo(function Avatar({ lampOn }: { lampOn: boolean }) {
   const a = lampOn ? 1 : 0;
   return (
-    <div className="avatar-sq" style={lampOn ? { borderColor: 'rgba(255,255,255,0.35)', boxShadow: '0 0 20px rgba(200,210,220,0.06)' } : undefined}>
+    <div className="avatar-sq" aria-hidden="true" style={lampOn ? { borderColor: 'rgba(255,255,255,0.35)', boxShadow: '0 0 20px rgba(200,210,220,0.06)' } : undefined}>
       <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <rect width="100" height="100" fill={lampOn ? '#0a0a0a' : '#050505'} />
         <circle cx="50" cy="40" r="20" fill={lampOn ? '#0d0d0d' : '#0a0a0a'} stroke={`rgba(255,255,255,${0.3 + a * 0.5})`} strokeWidth={0.2 + a * 0.5} />
@@ -273,12 +115,17 @@ const Avatar = memo(function Avatar({ lampOn }: { lampOn: boolean }) {
 });
 
 const Bio = memo(function Bio() {
+  const age = Math.floor(
+    (Date.now() - BIRTHDAY.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+  );
   return (
     <div className="bio-lines">
+      <h1 className="bio-name">Salah-Eddine Elouali</h1>
+      <p className="bio-role">Security Researcher</p>
       <p className="bio-quote">"Illusion is the first of all pleasures - Voltaire".</p>
-      <p className="bio-heading">Who am I?</p>
+      <h2 className="bio-heading">Who am I?</h2>
       <p className="bio-text">
-        Part-time 22-year-old, also stuck between fleeting desires<br />
+        Part-time {age}-year-old, also stuck between fleeting desires<br />
         and a yet unproven vision of who I should be.
       </p>
       <p className="bio-text" style={{ marginTop: '12px' }}>
@@ -294,10 +141,10 @@ const Bio = memo(function Bio() {
 
 const ProfileRow = memo(function ProfileRow({ lampOn }: { lampOn: boolean }) {
   return (
-    <div className="profile-row">
+    <header className="profile-row">
       <Avatar lampOn={lampOn} />
       <Bio />
-    </div>
+    </header>
   );
 });
 
@@ -320,58 +167,219 @@ const DashContainer = memo(function DashContainer({ lines, className = '' }: Das
   );
 });
 
+// interface WorkEntry {
+//   name: string;
+//   detail: string;
+//   meta: string;
+//   url: string;
+// }
+
+// const SELECTED_WORK: WorkEntry[] = [
+//   { name: 'CVE-2025-53770', detail: 'SharePoint ToolShell exploit chain analysis', meta: 'RB 2025', url: 'https://github.com/saladin0x1/CVE-2025-53770' },
+//   { name: 'lws-toctou-poc', detail: 'TOCTOU race condition proof of concept', meta: 'C 2025', url: 'https://github.com/saladin0x1/lws-toctou-poc' },
+//   { name: 'malware-circus', detail: 'Fernet-encrypted malware dissection', meta: 'PY 2025', url: 'https://github.com/saladin0x1/MalwareCircusFernetDissection' },
+//   { name: 'rfc-rag', detail: 'Retrieval-augmented answers over the RFC corpus', meta: 'PY 2025', url: 'https://github.com/saladin0x1/rfc-rag' },
+//   { name: 'xray-server', detail: 'VLESS+Reality server against internet censorship', meta: 'OPS 2025', url: 'https://github.com/saladin0x1/xray-server' },
+//   { name: 'bobbi-the-watchdog', detail: 'Infrastructure watchdog automation', meta: 'PY 2025', url: 'https://github.com/saladin0x1/bobbi-the-watchdog' },
+// ];
+
+const SelectedWork = memo(function SelectedWork() {
+  return (
+    <section className="content-block work-block" aria-labelledby="blogs-heading">
+      <div className="work-wrapper">
+        <h2 className="work-header" id="blogs-heading">BLOGS</h2>
+        {/* empty for now — statically generated article links land here later */}
+      </div>
+    </section>
+  );
+});
+
 const ReadingCorner = memo(function ReadingCorner({ lampOn, setLampOn }: { lampOn: boolean; setLampOn: (v: boolean) => void }) {
-  const [phase, setPhase] = useState<'off' | 'alive' | 'sweep' | 'settle'>('off');
+  const [catPhase, setCatPhase] = useState<'sitstart' | 'stand' | 'walk' | 'sitdown' | 'sit'>('sitstart');
   const b = lampOn ? 1 : 0;
-  const s = (o: number) => `rgba(255,255,255,${o + b * 0.45})`;
+  // Physics: the lamp lights ONLY what light can reach. No global boost —
+  // moon, stars, window stay night-dim whether the lamp is on or off.
+  const s = (o: number) => `rgba(255,255,255,${o})`;
+  // Objects inside the beam get lit (open book); brightness ~2.4x, capped.
+  const lit = (o: number) => (lampOn ? Math.min(1, o * 2.4) : o);
 
+  // preload + decode both strips BEFORE first paint of the cat —
+  // otherwise she pops in a beat after the scene renders (the glitch)
+  const [stripsReady, setStripsReady] = useState(false);
+  // Choreography: sit (0.5s) -> stand up -> walk (8s) -> sit down -> sit.
+  // Timer fallbacks guard against missed onAnimationEnd events.
   useEffect(() => {
-    if (lampOn) {
-      setPhase('alive');
-      const t1 = setTimeout(() => setPhase('sweep'), 1500);
-      const t2 = setTimeout(() => setPhase('settle'), 5500);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    } else {
-      setPhase('off');
-    }
-  }, [lampOn]);
+    if (!stripsReady) return;
+    const timings: Record<string, [string, number]> = {
+      sitstart: ['stand', 500],
+      stand: ['walk', 1100],
+      walk: ['sitdown', 8600],
+      sitdown: ['sit', 1100],
+    };
+    const next = timings[catPhase];
+    if (!next) return;
+    const t = setTimeout(() => setCatPhase(next[0] as typeof catPhase), next[1]);
+    return () => clearTimeout(t);
+  }, [catPhase, stripsReady]);
+  useEffect(() => {
+    Promise.all(['/cat/walk-start2.png', '/cat/sitting.png', '/cat/standup.png', '/cat/sitdown.png'].map((src) => new Promise<void>((res) => {
+      const i = new Image();
+      i.src = src;
+      i.onload = i.onerror = () => res();
+      if (i.decode) i.decode().then(() => res(), () => res());
+    }))).then(() => setStripsReady(true));
+  }, []);
 
-  const armClass = `lamp-arm${phase !== 'off' ? ` lamp-arm--${phase}` : ''}`;
+  const armClass = `lamp-arm${lampOn ? ' lamp-arm--lit' : ''}`;
 
   return (
     <div className="content-block reading-corner">
       <style>{`
-        @keyframes lampAlive {
-          0%, 30% { transform: rotate(0deg); }
-          40% { transform: rotate(2deg); }
-          50% { transform: rotate(-1deg); }
-          60% { transform: rotate(1deg); }
-          80%, 100% { transform: rotate(0deg); }
+        /* One continuous Pixar-style motion: anticipation -> sweep ->
+           overshoot -> damped spring settle. No phase swaps, no restarts. */
+        @keyframes lampMove {
+          0%, 8%   { transform: rotate(0deg); }
+          15%      { transform: rotate(-4.5deg); }   /* anticipation: pull back */
+          21%      { transform: rotate(-2deg); }     /* release into the sweep */
+          52%      { transform: rotate(34deg); }     /* main sweep, accelerating */
+          59%      { transform: rotate(39deg); }     /* overshoot past target */
+          68%      { transform: rotate(32deg); }     /* spring back */
+          76%      { transform: rotate(36deg); }     /* damped oscillation */
+          84%      { transform: rotate(34.5deg); }
+          100%     { transform: rotate(35deg); }     /* rest, lamp aimed at desk */
         }
-        @keyframes lampSweep {
-          0%, 2% { transform: rotate(0deg); }
-          45% { transform: rotate(35deg); }
-          55% { transform: rotate(35deg); }
-          95% { transform: rotate(-10deg); }
-          100% { transform: rotate(-10deg); }
+        /* The pool lives ON the desk and slides to where the beam points —
+           it never rotates through the air. Mirrors the arm timeline. */
+        @keyframes poolMove {
+          0%, 8%   { transform: translateX(0px); }
+          15%      { transform: translateX(5px); }
+          21%      { transform: translateX(2px); }
+          52%      { transform: translateX(-40px); }
+          59%      { transform: translateX(-45px); }
+          68%      { transform: translateX(-37px); }
+          76%      { transform: translateX(-42px); }
+          84%      { transform: translateX(-40px); }
+          100%     { transform: translateX(-41px); }
         }
-        @keyframes lampSettle {
-          0%, 4% { transform: rotate(-10deg); }
-          100% { transform: rotate(5deg); }
+        .pool {
+          will-change: transform;
+          transition: transform 0.9s cubic-bezier(0.34, 1.3, 0.64, 1);
+        }
+        .pool--lit {
+          animation: poolMove 5.5s cubic-bezier(0.33, 0, 0.2, 1) forwards;
+          transition: none;
+        }
+        /* Filament breathing: subtle, alive, not a strobe */
+        .cone--lit {
+          animation: coneFlicker 7s ease-in-out infinite;
+        }
+        @keyframes coneFlicker {
+          0%, 100% { opacity: 1; }
+          31% { opacity: 0.96; }
+          34% { opacity: 1; }
+          67% { opacity: 0.93; }
+          69% { opacity: 0.99; }
+          71% { opacity: 0.97; }
+        }
+        /* Dust drifts upward through the beam */
+        .dust circle {
+          animation: dustDrift 6s ease-in-out infinite;
+        }
+        .dust circle:nth-child(2) { animation-duration: 4.5s; animation-delay: -1.2s; }
+        .dust circle:nth-child(3) { animation-duration: 7.5s; animation-delay: -3s; }
+        .dust circle:nth-child(4) { animation-duration: 5.2s; animation-delay: -2s; }
+        .dust circle:nth-child(5) { animation-duration: 6.8s; animation-delay: -4s; }
+        @keyframes dustDrift {
+          0%   { transform: translate(0, 0); opacity: 0.2; }
+          50%  { transform: translate(2px, -14px); opacity: 1; }
+          100% { transform: translate(-1px, -28px); opacity: 0; }
         }
         .lamp-arm {
           transform-origin: 360px 175px;
           transform: rotate(0deg);
+          will-change: transform;
+          transition: transform 0.9s cubic-bezier(0.34, 1.3, 0.64, 1); /* springy return on off */
         }
-        .lamp-arm--alive {
-          animation: lampAlive 1.5s ease-in-out forwards;
+        .lamp-arm--lit {
+          animation: lampMove 5.5s cubic-bezier(0.33, 0, 0.2, 1) forwards;
+          transition: none;
         }
-        .lamp-arm--sweep {
-          animation: lampSweep 4s ease-in-out forwards;
+        /* Shadow cat — CPU-baked silhouette from DreamNoms "Somali Cat Animated v1.2" (CC BY 4.0) */
+        .cat-walker {
+          will-change: transform;
+          transform: translateX(-16.5px);
         }
-        .lamp-arm--settle {
-          animation: lampSettle 1.5s ease-out forwards;
+        .cat-walker.playing {
+          animation: catCross 8s linear both;
         }
+        @keyframes catCross {
+          from { transform: translateX(-16.5px); }
+          to { transform: translateX(188.5px); }
+        }
+        /* Hard cuts only — poses at seams are minimized by frame choice
+           (walk starts at the frame closest to standing, ends at the frame
+           closest to sitdown's first pose). No fades: a crossfade reads
+           as a translucent double cat. */
+        .cat-sprite.off { opacity: 0; }
+        /* The reordered walk strip starts on the gait pose closest to the
+           final stand pose. Infinite loops may wrap -756px back to 0px. */
+        .cat-sprite--walk.playing {
+          will-change: transform;
+          animation: catWalkFrames 0.95049s steps(12) infinite;
+        }
+        @keyframes catWalkFrames {
+          from { transform: translateX(0); }
+          to { transform: translateX(-756px); }
+        }
+        /* One-shot strips must NOT finish at -756px: that is one frame past
+           a 12-frame sheet. Explicit step-end frames hold the valid final
+           frame (-693px) instead of rendering a blank frame. */
+        .cat-sprite--stand.playing {
+          will-change: transform;
+          animation: catStandFrames 0.9s step-end forwards;
+        }
+        .cat-sprite--sitdown.playing {
+          will-change: transform;
+          animation: catSitdownFrames 0.9s step-end forwards;
+        }
+        .cat-sprite--sit.playing {
+          will-change: transform;
+          animation: catSitFrames 1.5s steps(12) infinite;
+        }
+        @keyframes catStandFrames {
+          0%      { transform: translateX(0); }
+          8.333%  { transform: translateX(-63px); }
+          16.667% { transform: translateX(-126px); }
+          25%     { transform: translateX(-189px); }
+          33.333% { transform: translateX(-252px); }
+          41.667% { transform: translateX(-315px); }
+          50%     { transform: translateX(-378px); }
+          58.333% { transform: translateX(-441px); }
+          66.667% { transform: translateX(-504px); }
+          75%     { transform: translateX(-567px); }
+          83.333% { transform: translateX(-630px); }
+          91.667%, 100% { transform: translateX(-693px); }
+        }
+        @keyframes catSitdownFrames {
+          0%      { transform: translateX(0); }
+          8.333%  { transform: translateX(-63px); }
+          16.667% { transform: translateX(-126px); }
+          25%     { transform: translateX(-189px); }
+          33.333% { transform: translateX(-252px); }
+          41.667% { transform: translateX(-315px); }
+          50%     { transform: translateX(-378px); }
+          58.333% { transform: translateX(-441px); }
+          66.667% { transform: translateX(-504px); }
+          75%     { transform: translateX(-567px); }
+          83.333% { transform: translateX(-630px); }
+          91.667%, 100% { transform: translateX(-693px); }
+        }
+        @keyframes catSitFrames {
+          from { transform: translateX(0); }
+          to { transform: translateX(-756px); }
+        }
+        /* The beam redirects at ~1/3 of the arm angle: the pool slides
+           along the desk, it never lifts off the surface. */
       `}</style>
       <svg
         viewBox="0 0 400 300"
@@ -380,22 +388,51 @@ const ReadingCorner = memo(function ReadingCorner({ lampOn, setLampOn }: { lampO
         fill="none"
       >
         <defs>
-            <radialGradient id="lampLight" cx="325" cy="155" r="110" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="rgba(200,210,220,0.09)" />
-              <stop offset="5%" stopColor="rgba(200,210,220,0.07)" />
-              <stop offset="12%" stopColor="rgba(200,210,220,0.04)" />
-              <stop offset="20%" stopColor="rgba(200,210,220,0.02)" />
-              <stop offset="35%" stopColor="rgba(200,210,220,0.008)" />
-              <stop offset="55%" stopColor="rgba(200,210,220,0.003)" />
-              <stop offset="80%" stopColor="rgba(200,210,220,0.001)" />
+            {/* Light physics: one radial gradient anchored at the bulb (325,152)
+                handles BOTH inverse-square distance falloff AND feathered cone
+                edges — the widening cone samples wider gradient rings. */}
+            <radialGradient id="distFade" cx="325" cy="152" r="115" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="rgba(215,225,235,0.34)" />
+              <stop offset="8%" stopColor="rgba(210,220,230,0.26)" />
+              <stop offset="20%" stopColor="rgba(205,215,225,0.15)" />
+              <stop offset="40%" stopColor="rgba(200,210,220,0.07)" />
+              <stop offset="70%" stopColor="rgba(195,205,215,0.025)" />
               <stop offset="100%" stopColor="rgba(0,0,0,0)" />
             </radialGradient>
+            {/* Desk pool: brightest at impact point, dissolving outward */}
+            <radialGradient id="poolGrad" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0%" stopColor="rgba(210,220,230,0.22)" />
+              <stop offset="45%" stopColor="rgba(200,210,220,0.09)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </radialGradient>
+            {/* Volumetric scatter at the shade opening: stacked blurs */}
+            <filter id="softGlow" x="-120%" y="-120%" width="340%" height="340%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="bloom" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="core" />
+              <feMerge>
+                <feMergeNode in="bloom" />
+                <feMergeNode in="core" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Shade interior: underside catches the bulb light */}
+            <linearGradient id="shadeGrad" x1="0.5" y1="1" x2="0.5" y2="0">
+              <stop offset="0%" stopColor="rgba(210,220,230,0.28)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </linearGradient>
+            {/* Right page catchlight: where the pool light lands on paper */}
+            <linearGradient id="pageGlow" x1="0" y1="0.5" x2="1" y2="0.5">
+              <stop offset="0%" stopColor="rgba(200,210,220,0)" />
+              <stop offset="100%" stopColor="rgba(200,210,220,0.07)" />
+            </linearGradient>
             <clipPath id="lightCone">
               <path d="M313 155 L288 258 L362 258 L343 155 Z" />
             </clipPath>
-            <radialGradient id="irGlow" cx="320" cy="200" r="180" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="rgba(200,210,220,0.035)" />
-              <stop offset="50%" stopColor="rgba(150,160,170,0.01)" />
+            {/* Local ambient: a faint sphere of light AROUND the lamp only,
+                not a scene-wide wash */}
+            <radialGradient id="irGlow" cx="330" cy="205" r="130" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="rgba(200,210,220,0.05)" />
+              <stop offset="55%" stopColor="rgba(150,160,170,0.014)" />
               <stop offset="100%" stopColor="rgba(0,0,0,0)" />
             </radialGradient>
           </defs>
@@ -432,15 +469,30 @@ const ReadingCorner = memo(function ReadingCorner({ lampOn, setLampOn }: { lampO
         <circle cx="20" cy="221" r="5.5" stroke={s(0.14)} strokeWidth={0.8 + b * 0.3} />
         <circle cx="34" cy="219" r="5" stroke={s(0.16)} strokeWidth={0.8 + b * 0.3} />
 
-        {/* Stacked books */}
-        <rect x="70" y="237" width="65" height="16" rx="1.5" stroke={s(0.35)} strokeWidth={1 + b * 0.4} />
-        <rect x="65" y="223" width="72" height="16" rx="1.5" stroke={s(0.3)} strokeWidth={1 + b * 0.4} />
-        <rect x="68" y="209" width="58" height="16" rx="1.5" stroke={s(0.25)} strokeWidth={1 + b * 0.4} />
-        <rect x="63" y="195" width="72" height="16" rx="1.5" stroke={s(0.35)} strokeWidth={1 + b * 0.4} />
-        <line x1="95" y1="237" x2="95" y2="253" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
-        <line x1="102" y1="223" x2="102" y2="239" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
-        <line x1="92" y1="209" x2="92" y2="225" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
-        <line x1="88" y1="195" x2="88" y2="211" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+        {/* Stacked books — physical stack: exact contact (no sinking into
+            each other), each volume tilted ~1° and offset like real wear */}
+        <g transform="rotate(-0.8 102 245)">
+          <rect x="70" y="237" width="65" height="16" rx="1.5" stroke={s(0.35)} strokeWidth={1 + b * 0.4} fill="none" />
+          <line x1="82" y1="240" x2="82" y2="250" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+          <line x1="95" y1="240" x2="95" y2="250" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+          <line x1="108" y1="240" x2="108" y2="250" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+        </g>
+        <g transform="rotate(0.6 101 229)">
+          <rect x="65" y="221" width="72" height="16" rx="1.5" stroke={s(0.3)} strokeWidth={1 + b * 0.4} fill="none" />
+          <line x1="88" y1="224" x2="88" y2="234" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+          <line x1="102" y1="224" x2="102" y2="234" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+        </g>
+        <g transform="rotate(-1.1 97 213)">
+          <rect x="68" y="205" width="58" height="16" rx="1.5" stroke={s(0.25)} strokeWidth={1 + b * 0.4} fill="none" />
+          <line x1="85" y1="208" x2="85" y2="218" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+          <line x1="97" y1="208" x2="97" y2="218" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+          <line x1="109" y1="208" x2="109" y2="218" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+        </g>
+        <g transform="rotate(0.9 99 197)">
+          <rect x="63" y="189" width="72" height="16" rx="1.5" stroke={s(0.35)} strokeWidth={1 + b * 0.4} fill="none" />
+          <line x1="88" y1="192" x2="88" y2="202" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+          <line x1="102" y1="192" x2="102" y2="202" stroke={s(0.15)} strokeWidth={0.5 + b * 0.3} />
+        </g>
 
         {/* Coffee mug */}
         <rect x="170" y="240" width="24" height="15" rx="2.5" stroke={s(0.3)} strokeWidth={1 + b * 0.4} />
@@ -460,52 +512,103 @@ const ReadingCorner = memo(function ReadingCorner({ lampOn, setLampOn }: { lampO
           <animateTransform attributeName="transform" type="translate" values="0 0;-2 -4;0 0" dur="4s" repeatCount="indefinite" />
         </path>
 
-        {/* Open book */}
-        <path d="M228 253 Q248 225 268 253" stroke={s(0.35)} strokeWidth={1.2 + b * 0.4} />
-        <path d="M268 253 Q288 225 308 253" stroke={s(0.35)} strokeWidth={1.2 + b * 0.4} />
-        <line x1="228" y1="253" x2="308" y2="253" stroke={s(0.25)} strokeWidth={1 + b * 0.3} />
-        <path d="M243 241 Q248 239.2 253 241" stroke={s(0.2)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M241 243 Q248 240.9 255 243" stroke={s(0.18)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M239 245 Q248 242.6 257 245" stroke={s(0.16)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M237 247 Q248 244.4 259 247" stroke={s(0.14)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M235 249 Q248 246.3 261 249" stroke={s(0.12)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M233 251 Q248 248.2 263 251" stroke={s(0.1)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M283 241 Q288 239.2 293 241" stroke={s(0.2)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M281 243 Q288 240.9 295 243" stroke={s(0.18)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M279 245 Q288 242.6 297 245" stroke={s(0.16)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M277 247 Q288 244.4 299 247" stroke={s(0.14)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M275 249 Q288 246.3 301 249" stroke={s(0.12)} strokeWidth={0.5 + b * 0.3} fill="none" />
-        <path d="M273 251 Q288 248.2 303 251" stroke={s(0.1)} strokeWidth={0.5 + b * 0.3} fill="none" />
+        {/* Open book — the one object inside the beam, so it gets lit;
+            the right page additionally catches the desk pool glow */}
+        <path d="M228 253 Q248 225 268 253" stroke={s(lit(0.35))} strokeWidth={1.2 + b * 0.4} fill="none" />
+        <path d="M268 253 Q288 225 308 253" stroke={s(lit(0.35))} strokeWidth={1.2 + b * 0.4}
+          fill={lampOn ? 'url(#pageGlow)' : 'none'} />
+        <line x1="228" y1="253" x2="308" y2="253" stroke={s(lit(0.25))} strokeWidth={1 + b * 0.3} />
+        <path d="M243 241 Q248 239.2 253 241" stroke={s(lit(0.2))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M241 243 Q248 240.9 255 243" stroke={s(lit(0.18))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M239 245 Q248 242.6 257 245" stroke={s(lit(0.16))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M237 247 Q248 244.4 259 247" stroke={s(lit(0.14))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M235 249 Q248 246.3 261 249" stroke={s(lit(0.12))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M233 251 Q248 248.2 263 251" stroke={s(lit(0.1))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M283 241 Q288 239.2 293 241" stroke={s(lit(0.2))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M281 243 Q288 240.9 295 243" stroke={s(lit(0.18))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M279 245 Q288 242.6 297 245" stroke={s(lit(0.16))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M277 247 Q288 244.4 299 247" stroke={s(lit(0.14))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M275 249 Q288 246.3 301 249" stroke={s(lit(0.12))} strokeWidth={0.5 + b * 0.3} fill="none" />
+        <path d="M273 251 Q288 248.2 303 251" stroke={s(lit(0.1))} strokeWidth={0.5 + b * 0.3} fill="none" />
+
+        {/* Shadow cat — silhouette sprite from DreamNoms "Somali Cat Animated v1.2", CC BY 4.0
+            https://sketchfab.com/3d-models/somali-cat-animated-ver-12-e185c3fd92b64c32b4515a32b29252fc
+            Walks the front desk edge, then sits between mug and open book */}
+        <defs>
+          <clipPath id="catWindow">
+            <rect x="0" y="208" width="63" height="48" />
+          </clipPath>
+        </defs>
+        {/* All five sprites mount ONCE and never unmount — phases flip
+            visibility only, so no transition ever re-composites an image
+            (that one-frame blank was the flash). */}
+        {stripsReady && (
+          <>
+            <g transform="translate(-16.4,0)">
+              <g clipPath="url(#catWindow)">
+                <image className={`cat-sprite cat-sprite--sit${catPhase === 'sitstart' ? ' on' : ' off'}`} href="/cat/sitting.png" x="0" y="215.8" width="756" height="42" />
+              </g>
+            </g>
+            <g className={`cat-walker${catPhase === 'walk' ? ' playing' : ''}`}
+              onAnimationEnd={(e) => { if (e.animationName === 'catCross') setCatPhase('sitdown'); }}>
+              <g clipPath="url(#catWindow)">
+                {/* standup lives INSIDE the walker: at walk start its ghost
+                    dissolves WHILE MOVING with her — a stationary ghost
+                    lingering behind was the flicker */}
+                <image
+                  className={`cat-sprite cat-sprite--stand${catPhase === 'stand' ? ' playing on' : ' off'}`}
+                  href="/cat/standup.png" x="0" y="215.8" width="756" height="42"
+                  onAnimationEnd={(e) => { if (e.animationName === 'catStandFrames') setCatPhase('walk'); }}
+                />
+                <image className={`cat-sprite cat-sprite--walk${catPhase === 'walk' ? ' playing on' : ' off'}`} href="/cat/walk-start2.png" x="0" y="215.8" width="756" height="42" />
+              </g>
+            </g>
+            <g transform="translate(188.5,0)">
+              <g clipPath="url(#catWindow)">
+                <image
+                  className={`cat-sprite cat-sprite--sitdown${catPhase === 'sitdown' ? ' playing on' : ' off'}`}
+                  href="/cat/sitdown.png" x="0" y="215.8" width="756" height="42"
+                  onAnimationEnd={(e) => { if (e.animationName === 'catSitdownFrames') setCatPhase('sit'); }}
+                />
+                <image className={`cat-sprite cat-sprite--sit${catPhase === 'sit' ? ' playing on' : ' off'}`} href="/cat/sitting.png" x="0" y="215.8" width="756" height="42" />
+              </g>
+            </g>
+          </>
+        )}
 
         {/* Lamp */}
-        <g onClick={() => setLampOn(!lampOn)} style={{ cursor: 'pointer' }}>
+        <g
+          role="button"
+          tabIndex={0}
+          aria-label={lampOn ? 'Turn reading lamp off' : 'Turn reading lamp on'}
+          aria-pressed={lampOn}
+          onClick={() => setLampOn(!lampOn)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setLampOn(!lampOn);
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <rect x="300" y="140" width="60" height="120" fill="transparent" stroke="none" />
           <ellipse cx="360" cy="253" rx="18" ry="3" stroke={s(0.4)} strokeWidth={1 + b * 0.4} />
           <line x1="360" y1="250" x2="360" y2="175" stroke={s(0.3)} strokeWidth={1 + b * 0.3} />
           <circle cx="360" cy="175" r="3" stroke={s(0.4)} strokeWidth={1 + b * 0.3} />
+          {/* Physical arm + shade — the only parts that rotate */}
           <g className={armClass}>
             <line x1="360" y1="175" x2="325" y2="145" stroke={s(0.3)} strokeWidth={1 + b * 0.3} />
-            <path d="M313 145 L338 145 L343 155 L308 155 Z" stroke={s(0.4)} strokeWidth={1 + b * 0.3} />
-            {/* LAYER 1: Cone with distance falloff + soft edges */}
-            <g clipPath="url(#lightCone)">
-              <path d="M308 155 L277 258 L374 258 L343 155 Z"
-                fill={lampOn ? "url(#distFade)" : s(0.008)}
-                mask="url(#coneMask)"
-              />
-            </g>
-            {/* LAYER 2: Diffuse glow at shade opening */}
+            <path d="M313 145 L338 145 L343 155 L308 155 Z" stroke={s(0.4)} strokeWidth={1 + b * 0.3}
+              fill={lampOn ? 'url(#shadeGrad)' : 'none'}
+            />
+            {/* Diffuse scatter at the shade mouth — rides with the shade */}
             {lampOn && (
-              <ellipse cx="325" cy="155" rx="18" ry="5"
-                fill="rgba(200,210,220,0.12)" filter="url(#softGlow)"
+              <ellipse cx="325" cy="155" rx="16" ry="4"
+                fill="rgba(210,220,230,0.14)" filter="url(#softGlow)"
+                style={{ mixBlendMode: 'screen' }}
               />
             )}
-            {/* LAYER 3: Hot spot on desk surface */}
-            <ellipse cx="325" cy="256" rx="42" ry="4"
-              fill={lampOn ? "rgba(200,210,220,0.055)" : s(0.012)} stroke="none"
-            >
-              <animate attributeName="opacity" values="1;0.6;1" dur="4s" repeatCount="indefinite" />
-            </ellipse>
-            {/* LAYER 4: Bright line at shade opening (bulb) */}
+            {/* Bulb line + IR dot at the shade opening */}
             <line x1="311" y1="155" x2="339" y2="155"
               stroke={lampOn ? "rgba(200,210,220,0.25)" : s(0.03)}
               strokeWidth={0.5 + b * 0.5}
@@ -515,49 +618,52 @@ const ReadingCorner = memo(function ReadingCorner({ lampOn, setLampOn }: { lampO
                 <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite" />
               </circle>
             )}
+            {/* The cone hangs off the shade at FULL rotation — light comes
+                from where the shade actually is. Ray texture + flicker
+                keep it alive; dust drifts through it. */}
+            <g clipPath="url(#lightCone)" style={{ mixBlendMode: 'screen' }}
+              className={lampOn ? 'cone cone--lit' : 'cone'}>
+              <path d="M308 155 L277 258 L374 258 L343 155 Z"
+                fill={lampOn ? "url(#distFade)" : s(0.008)}
+              />
+              {lampOn && (
+                <g className="dust">
+                  <circle cx="318" cy="190" r="0.9" fill="rgba(220,228,238,0.5)" />
+                  <circle cx="330" cy="215" r="0.6" fill="rgba(220,228,238,0.4)" />
+                  <circle cx="322" cy="238" r="1.1" fill="rgba(220,228,238,0.35)" />
+                  <circle cx="335" cy="248" r="0.7" fill="rgba(220,228,238,0.45)" />
+                  <circle cx="312" cy="205" r="0.5" fill="rgba(220,228,238,0.4)" />
+                </g>
+              )}
+            </g>
           </g>
+          {/* The pool stays ON the desk surface, sliding to where the
+              beam lands — separate from the rotating arm. */}
+          <ellipse className={`pool${lampOn ? ' pool--lit' : ''}`} cx="325" cy="256" rx="46" ry="6"
+            fill={lampOn ? "url(#poolGrad)" : s(0.012)} stroke="none"
+            style={{ mixBlendMode: 'screen' }}
+          >
+            <animate attributeName="opacity" values="1;0.75;1" dur="5s" repeatCount="indefinite" />
+          </ellipse>
         </g>
       </svg>
     </div>
   );
 });
 
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
-function isSleepTime(): boolean
-
 function isSleepTime(): boolean {
   const hour = new Date().getHours();
   return hour >= 23 || hour < 6;
 }
 
-function StatusWidget() {
+function StatusWidget({ freq }: { freq: FrequencyState }) {
   const uptime = useUptime(BIRTHDAY);
-  const freq = useFrequency(FREQUENCY_POLL_INTERVAL);
-  const [isNightTime, setIsNightTime] = useState(isSleepTime);
+  // Deterministic initial value keeps prerendered HTML hydration-safe.
+  const [isNightTime, setIsNightTime] = useState(false);
 
   useEffect(() => {
     const checkTime = () => setIsNightTime(isSleepTime());
+    checkTime();
     const interval = setInterval(checkTime, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -590,54 +696,38 @@ interface MarqueeProps {
 const Marquee = memo(function Marquee({ text, className = '' }: MarqueeProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textRef = React.useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
 
+  // WAAPI marquee: measure once, animate on the COMPOSITOR thread.
+  // The old version setState'd every frame (React re-render at 60fps,
+  // main-thread saturation) — it froze the cat every time the status
+  // line scrolled. Same choreography: hold 3s -> scroll -> hold 2s -> loop.
   useEffect(() => {
-    let cancelled = false;
-    let timeoutId: number;
+    const el = textRef.current;
+    const box = containerRef.current;
+    if (!el || !box) return;
 
-    const runMarquee = async () => {
-      if (!containerRef.current || !textRef.current || cancelled) return;
+    el.getAnimations().forEach((a) => a.cancel());
+    const overflow = el.scrollWidth - box.offsetWidth;
+    if (overflow <= 0) {
+      el.style.transform = 'translate3d(0,0,0)';
+      return;
+    }
 
-      const containerWidth = containerRef.current.offsetWidth;
-      const textWidth = textRef.current.scrollWidth;
-      const overflow = textWidth - containerWidth;
+    const HOLD_START = 3000;
+    const HOLD_END = 2000;
+    const SPEED = 0.4 * 16.7; // px per 16.7ms frame -> px/ms
+    const scrollMs = overflow / SPEED;
+    const totalMs = HOLD_START + scrollMs + HOLD_END;
 
-      // No scrolling needed if text fits
-      if (overflow <= 0) {
-        setOffset(0);
-        return;
-      }
-
-      // 1. Show start for 3s
-      setOffset(0);
-      await new Promise(r => timeoutId = window.setTimeout(r, 3000));
-      if (cancelled) return;
-
-      // 2. Scroll to reveal end (move text LEFT)
-      const scrollSpeed = 0.4; // px per frame
-      let pos = 0;
-      while (pos < overflow && !cancelled) {
-        pos += scrollSpeed;
-        setOffset(-Math.min(pos, overflow));
-        await new Promise(r => requestAnimationFrame(r));
-      }
-      if (cancelled) return;
-
-      // 3. Hold at end for 2s
-      await new Promise(r => timeoutId = window.setTimeout(r, 2000));
-      if (cancelled) return;
-
-      // 4. Loop
-      runMarquee();
-    };
-
-    runMarquee();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
+    el.animate(
+      [
+        { transform: 'translate3d(0,0,0)', offset: 0 },
+        { transform: 'translate3d(0,0,0)', offset: HOLD_START / totalMs },
+        { transform: `translate3d(${-overflow}px,0,0)`, offset: (HOLD_START + scrollMs) / totalMs },
+        { transform: `translate3d(${-overflow}px,0,0)`, offset: 1 },
+      ],
+      { duration: totalMs, iterations: Infinity, easing: 'linear' }
+    );
   }, [text]);
 
   return (
@@ -649,10 +739,10 @@ const Marquee = memo(function Marquee({ text, className = '' }: MarqueeProps) {
       <div
         ref={textRef}
         style={{
-          transform: `translateX(${offset}px)`,
           whiteSpace: 'nowrap',
           display: 'inline-block',
-          paddingLeft: '2px'
+          paddingLeft: '2px',
+          willChange: 'transform'
         }}
       >
         {text}
@@ -661,96 +751,26 @@ const Marquee = memo(function Marquee({ text, className = '' }: MarqueeProps) {
   );
 });
 
-function SpotifyWidget() {
-  const spotify = useSpotify(SPOTIFY_POLL_INTERVAL);
-  const [dynamicStatus, setDynamicStatus] = useState('OFFLINE');
-
-  useEffect(() => {
-    // Skip generation when Spotify is down
-    if (spotify.status === 'error') return;
-
-    const fetchStatus = async () => {
-      const seed = spotify.isPlaying && spotify.title && spotify.artist
-        ? `${spotify.artist} - ${spotify.title}`
-        : '[SILENCE]';
-      const status = await fetchDynamicStatus(spotify.isPlaying, seed);
-      setDynamicStatus(status);
-    };
-    fetchStatus();
-  }, [spotify.status, spotify.isPlaying, spotify.title, spotify.artist]);
-
-  if (spotify.status === 'error') {
-    return (
-      <div className="widget-box sm spotify-widget">
-        <div className="spotify-container">
-          <div className="spotify-art-placeholder">
-            <div className="spotify-disc" />
-          </div>
-          <div className="spotify-info">
-            <div className="spotify-label">SPOTIFY</div>
-            <div className="spotify-status">UNDER MAINTENANCE</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!spotify.isPlaying) {
-    return (
-      <div className="widget-box sm spotify-widget">
-        <div className="spotify-container">
-          <div className="spotify-art-placeholder">
-            <div className="spotify-disc" />
-          </div>
-          <div className="spotify-info">
-            <div className="spotify-label">SPOTIFY</div>
-            <div className="spotify-status">
-              <div className="marquee-text">{dynamicStatus}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="widget-box sm spotify-widget">
-      <div className="spotify-container">
-        <div className="spotify-art">
-          {spotify.albumArt && <img src={spotify.albumArt} alt="Album art" />}
-        </div>
-        <div className="spotify-info spotify-info--playing">
-          <div className="spotify-label">
-            <div className="marquee-text">{dynamicStatus}</div>
-          </div>
-          <div className="spotify-title">{spotify.title}</div>
-          <div className="spotify-artist">{spotify.artist}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FrequencyWidget() {
-  const freq = useFrequency(FREQUENCY_POLL_INTERVAL);
+function FrequencyWidget({ freq }: { freq: FrequencyState }) {
   const [dynamicStatus, setDynamicStatus] = useState('STANDBY');
 
   useEffect(() => {
     if (freq.status === 'loading') return;
 
-    const fetchStatus = async () => {
-      const isLive = freq.status === 'live';
-      const seed = isLive && freq.track && freq.artist
-        ? `${freq.artist} - ${freq.track}`
-        : '[SILENCE]';
-
-      const status = await fetchDynamicStatus(isLive, seed);
-      setDynamicStatus(status);
-    };
-    fetchStatus();
+    let cancelled = false;
+    // Corpus, lyrics logic, and AI reaction code are noncritical. Keep them
+    // out of the initial bundle and load only once Last.fm has answered.
+    import('./soul')
+      .then(({ resolveSignal }) => resolveSignal({
+        isActive: freq.status === 'live',
+        artist: freq.artist,
+        track: freq.track,
+      }))
+      .then((line) => { if (!cancelled) setDynamicStatus(line); })
+      .catch(() => { if (!cancelled) setDynamicStatus('STANDBY'); });
+    return () => { cancelled = true; };
   }, [freq.status, freq.track, freq.artist]);
 
-  // Idle mode - show offline state
   if (freq.status !== 'live') {
     return (
       <div className="widget-box sm frequency-widget">
@@ -788,6 +808,12 @@ function FrequencyWidget() {
     </div>
   );
 }
+
+// Reserved slot: the old Spotify box. Last.fm covers YouTube + Spotify
+// scrobbles, so the interior stays empty until something else moves in.
+const ReservedBox = memo(function ReservedBox() {
+  return <div className="widget-box sm reserved-widget" aria-hidden="true" />;
+});
 
 const NavWidget = memo(function NavWidget() {
   return (
@@ -834,11 +860,11 @@ const SocialGrid = memo(function SocialGrid() {
             return (
               <a
                 key={index}
-                href={isMail ? undefined : social.url}
+                href={social.url}
                 target={isMail ? undefined : '_blank'}
-                rel="noopener noreferrer"
+                rel={isMail ? undefined : 'noopener noreferrer'}
                 className="social-link"
-                style={social.doubleWidth ? { gridColumn: 'span 2' } : undefined}
+                aria-label={social.label === 'INSTA' ? 'Instagram' : social.label}
                 onClick={isMail ? (e) => { e.preventDefault(); setIsModalOpen(true); } : undefined}
               >
                 <div className="btn-sq">
@@ -860,46 +886,53 @@ const BottomFiller = memo(function BottomFiller() {
 });
 
 const Footer = memo(function Footer() {
-  return <div className="footer">2003-2026</div>;
+  return <footer className="footer">2003-2026</footer>;
 });
 
 function LeftColumn() {
   const [lampOn, setLampOn] = useState(false);
   return (
-    <div className="left-col">
+    <section className="left-col" aria-label="Profile and writing">
       <ProfileRow lampOn={lampOn} />
-      <DashContainer lines={12} />
+      <SelectedWork />
       <ReadingCorner lampOn={lampOn} setLampOn={setLampOn} />
-    </div>
+    </section>
   );
 }
 
 function RightColumn() {
+  // One shared request: these widgets previously created two independent
+  // polling loops for the same Last.fm response.
+  const freq = useFrequency(FREQUENCY_POLL_INTERVAL);
+
   return (
-    <div className="right-col">
-      <StatusWidget />
-      <FrequencyWidget />
-      <SpotifyWidget />
+    <aside className="right-col" aria-label="Live status and links">
+      <StatusWidget freq={freq} />
+      <FrequencyWidget freq={freq} />
+      <ReservedBox />
       <NavWidget />
       <SocialGrid />
       <BottomFiller />
       <Footer />
-    </div>
+    </aside>
   );
 }
 
-function App() {
+export function App() {
   return (
-    <div className="wireframe-container">
+    <main className="wireframe-container">
       <LeftColumn />
       <RightColumn />
-    </div>
+    </main>
   );
 }
 
-// --- Mount ---
+// --- Mount / hydrate ---
 
-const root = document.getElementById('root');
-if (root) {
-  ReactDOM.createRoot(root).render(<App />);
+if (typeof document !== 'undefined') {
+  const root = document.getElementById('root');
+  if (root) {
+    if (root.hasChildNodes()) ReactDOM.hydrateRoot(root, <App />);
+    else ReactDOM.createRoot(root).render(<App />);
+  }
 }

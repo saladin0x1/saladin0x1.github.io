@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="index, follow">
+<title>A Cat Lives Here — saladin.su</title>
+<meta name="description" content="A Somali shadow cat follows your cursor across a monochrome nocturnal stage.">
+<link rel="canonical" href="https://saladin.su/cat">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/space-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://saladin.su/cat">
+<meta property="og:title" content="A Cat Lives Here — saladin.su">
+<meta property="og:description" content="A Somali shadow cat follows your cursor across a monochrome nocturnal stage.">
+<meta property="og:image" content="https://saladin.su/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://saladin.su/og-image.png">
+<style>
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+}
+:root {
+  --bg: #000000;
+  --wire: rgba(255, 255, 255, 0.1);
+  --text-muted: #999;
+  --text-faint: #666;
+  --floor: 14vh;
+  /* frame geometry: strips are 12 x (192x128), cat fills most of frame height */
+  --fh: min(38vh, 340px);
+  --fw: calc(var(--fh) * 1.5);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text-muted);
+  overflow: hidden;
+  cursor: crosshair;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: url('/noise.png') repeat;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+#stage {
+  position: fixed; inset: 0;
+  /* noir spotlight: the black cat reads against lit floor + glow */
+  background: radial-gradient(ellipse 75% 60% at 50% 64%, rgba(255,255,255,0.18), rgba(255,255,255,0.05) 55%, transparent 78%);
+}
+#stage::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: calc(var(--floor) + 18vh);
+  background: linear-gradient(to bottom,
+    transparent,
+    rgba(255,255,255,0.16) 45%,
+    rgba(255,255,255,0.34) 78%,
+    rgba(255,255,255,0.46));
+}
+
+#floor-line {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: var(--floor);
+  border-top: 1px solid var(--wire);
+  z-index: 1;
+}
+
+#cat {
+  position: fixed;
+  bottom: calc(var(--floor) - 2vh);   /* feet overlap the floor line slightly */
+  left: 0;
+  width: var(--fw);
+  height: var(--fh);
+  z-index: 5;
+  will-change: transform;
+  /* JS drives translateX; flip handled on inner wrapper */
+}
+#cat .flipbox {
+  width: 100%; height: 100%;
+  will-change: transform;
+}
+#cat .sprite {
+  width: 100%; height: 100%;
+  background-repeat: no-repeat;
+  background-size: calc(var(--fw) * 12) 100%;
+  image-rendering: auto;
+  animation: catFrames var(--frame-dur, 0.9s) steps(12) infinite;
+}
+@keyframes catFrames {
+  from { background-position-x: 0px; }
+  to   { background-position-x: calc(var(--fw) * -12); }
+}
+
+.hud {
+  position: fixed;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  user-select: none;
+}
+#home {
+  top: 20px; left: 24px;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+#home:hover { color: #fff; }
+#credit {
+  bottom: 16px; right: 24px;
+  color: var(--text-faint);
+}
+#credit a { color: var(--text-muted); text-decoration: none; border-bottom: 1px dotted var(--text-faint); }
+#hint {
+  bottom: 16px; left: 24px;
+  color: var(--text-faint);
+  opacity: 0.7;
+}
+@media (max-width: 600px) {
+  :root { --fh: 30vh; }
+  #hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #cat .sprite { animation-duration: 2s; }
+}
+</style>
+</head>
+<body>
+<main id="stage" aria-label="Interactive shadow cat">
+  <h1 class="visually-hidden">A cat lives here</h1>
+</main>
+<div id="floor-line"></div>
+<div id="cat"><div class="flipbox"><div class="sprite" id="sprite"></div></div></div>
+<a class="hud" id="home" href="/">&larr; saladin.su</a>
+<div class="hud" id="hint">she follows your cursor</div>
+<div class="hud" id="credit">somali shadow &mdash; <a href="https://sketchfab.com/3d-models/somali-cat-animated-ver-12-e185c3fd92b64c32b4515a32b29252fc" rel="noopener noreferrer">DreamNoms</a> (CC&nbsp;BY&nbsp;4.0)</div>
+
+<script>
+(async () => {
+  const STRIPS = {
+    idle:     { src: '/cat/idle.png',     dur: 2.0,  loop: true  },
+    walk:     { src: '/cat/walk.png',     dur: 0.9,  loop: true  },
+    sitdown:  { src: '/cat/sitdown.png',  dur: 1.2,  loop: false },
+    sitting:  { src: '/cat/sitting.png',  dur: 2.0,  loop: true  },
+    standup:  { src: '/cat/standup.png',  dur: 1.2,  loop: false },
+  };
+
+  const cat = document.getElementById('cat');
+  const flipbox = cat.querySelector('.flipbox');
+  const sprite = document.getElementById('sprite');
+
+  let state = 'idle';
+  let x = window.innerWidth / 2 - frameW() / 2;
+  let facing = 1;           // 1 right, -1 left
+  let targetX = null;
+  let walkSpeed = 0;        // px per second
+  let timer = null;
+  let lastT = performance.now();
+
+  function frameW() {
+    return cat.getBoundingClientRect().width;
+  }
+  function setStrip(name) {
+    const s = STRIPS[name];
+    sprite.style.backgroundImage = `url(${s.src})`;
+    sprite.style.setProperty('--frame-dur', s.dur + 's');
+    sprite.style.animation = 'none';
+    sprite.offsetHeight; // reflow to restart
+    sprite.style.animation = '';
+    sprite.style.animationIterationCount = s.loop ? 'infinite' : '1';
+    sprite.style.animationFillMode = s.loop ? 'none' : 'forwards';
+    state = name;
+    window.__cat = { state, x: Math.round(x), facing };
+  }
+  function face(dir) {
+    facing = dir;
+    flipbox.style.transform = dir < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+  }
+  function schedule(fn, ms) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(fn, ms);
+  }
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  // ---- behavior ----
+  function goIdle() {
+    setStrip('idle');
+    schedule(idleCheck, 2200);
+  }
+  function idleCheck() {
+    if (state !== 'idle') return;
+    if (performance.now() - lastCursorMove > 5000) { goSit(); return; }
+    schedule(idleCheck, 2000);
+  }
+  function goSit() {
+    setStrip('sitdown');
+    sprite.addEventListener('animationend', function onEnd() {
+      sprite.removeEventListener('animationend', onEnd);
+      setStrip('sitting');
+    });
+  }
+  function goStand(after) {
+    setStrip('standup');
+    sprite.addEventListener('animationend', function onEnd() {
+      sprite.removeEventListener('animationend', onEnd);
+      (after || goIdle)();
+    });
+  }
+  const clampX = (tx) => Math.max(frameW() * 0.1, Math.min(window.innerWidth - frameW() * 0.9, tx));
+  function retarget(tx) {
+    targetX = clampX(tx);
+    face(targetX > x ? 1 : -1);
+    walkSpeed = Math.min(380, Math.max(150, Math.abs(targetX - x) * 0.5));
+  }
+  function walkTo(tx) {
+    retarget(tx);
+    if (Math.abs(targetX - x) < 2) { targetX = null; goIdle(); return; }
+    if (state !== 'walk') setStrip('walk');
+  }
+  function onArrive() {
+    targetX = null;
+    goIdle();
+  }
+
+  // ---- main loop ----
+  function tick(t) {
+    const dt = Math.min(0.05, (t - lastT) / 1000);
+    lastT = t;
+    if (state === 'walk' && targetX !== null) {
+      const dir = targetX > x ? 1 : -1;
+      x += dir * walkSpeed * dt;
+      if ((dir > 0 && x >= targetX) || (dir < 0 && x <= targetX)) {
+        x = targetX;
+        onArrive();
+      }
+    }
+    cat.style.transform = `translateX(${x}px)`;
+    if (window.__cat) { window.__cat.x = Math.round(x); window.__cat.state = state; window.__cat.facing = facing; }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ---- input: she follows the cursor ----
+  const DEADZONE = 45;
+  let desiredX = null;
+  let lastCursorMove = 0;
+
+  function onCursor(clientX) {
+    lastCursorMove = performance.now();
+    // center her body (~61% across the frame) on the cursor
+    desiredX = clientX - frameW() * 0.61;
+    if (state === 'sitdown' || state === 'standup') return;
+    const dist = Math.abs(clampX(desiredX) - x);
+    if (state === 'sitting') {
+      if (dist > DEADZONE * 2) goStand(() => walkTo(desiredX));
+      return;
+    }
+    if (state === 'walk') {
+      if (Math.abs(clampX(desiredX) - targetX) > 55) retarget(desiredX);
+      return;
+    }
+    if (dist > DEADZONE) walkTo(desiredX);
+  }
+
+  const stage = document.getElementById('stage');
+  stage.addEventListener('pointermove', (e) => onCursor(e.clientX));
+  stage.addEventListener('pointerdown', (e) => onCursor(e.clientX));
+
+  window.addEventListener('resize', () => {
+    x = Math.min(x, window.innerWidth - frameW());
+  });
+
+  // ---- preload every strip so the first walk/sit never stalls on fetch+decode ----
+  await Promise.all(Object.values(STRIPS).map((s) => new Promise((res) => {
+    const i = new Image();
+    i.src = s.src;
+    i.onload = i.onerror = res;
+    if (i.decode) i.decode().then(res, res);
+  })));
+
+  // start: stand still, wait for the cursor
+  setStrip('idle');
+  schedule(idleCheck, 3000);
+})();
+</script>
+</body>
+</html>

@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "prebuild": "node scripts/generate-sitemap.mjs",
+    "build": "npm run build:client && npm run build:ssr && node scripts/prerender.mjs",
+    "build:client": "vite build",
+    "build:ssr": "vite build --ssr src/scripts/main.tsx --outDir .ssr",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.2",
     "vite": "^6.2.0",
     "wrangler": "^4.54.0"
   },
