@@ -4,7 +4,9 @@ interface AnalyticsClient {
 }
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
+// This project lives in PostHog EU; using the US ingestion host rejects
+// the otherwise valid public project token with 401 responses.
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://eu.i.posthog.com';
 
 let client: AnalyticsClient | null = null;
 let clientPromise: Promise<AnalyticsClient | null> | null = null;

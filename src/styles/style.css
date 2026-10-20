@@ -568,6 +568,108 @@ body::before {
     font-family: var(--font-mono);
 }
 
+/* Desktop optical scale — matches the composition users see at roughly
+   110% browser zoom, without CSS zoom or transformed hit-testing. */
+@media (min-width: 901px) {
+    body {
+        font-size: 15px;
+        padding-top: 44px;
+        padding-bottom: 44px;
+    }
+
+    .wireframe-container {
+        grid-template-columns: 1fr 352px;
+        gap: 44px;
+    }
+
+    .left-col {
+        gap: 33px;
+    }
+
+    .profile-row {
+        gap: 33px;
+    }
+
+    .avatar-sq {
+        width: 176px;
+        height: 176px;
+    }
+
+    .bio-lines {
+        gap: 13px;
+        font-size: 15px;
+    }
+
+    .bio-name { font-size: 20px; }
+    .bio-role { font-size: 13px; }
+    .bio-quote { font-size: 14px; }
+    .bio-heading { font-size: 16px; }
+    .bio-text { font-size: 15px; }
+
+    .content-block {
+        height: 330px;
+    }
+
+    .work-block {
+        height: auto;
+    }
+
+    .work-wrapper {
+        padding: 17px;
+        gap: 15px;
+    }
+
+    .work-header {
+        font-size: 13px;
+    }
+
+    .reading-corner {
+        height: 462px;
+    }
+
+    .right-col {
+        gap: 22px;
+        padding-left: 33px;
+    }
+
+    .widget-box {
+        padding: 17px;
+    }
+
+    .widget-box.sm {
+        height: 77px;
+    }
+
+    .widget-box.md {
+        min-height: 132px;
+    }
+
+    .status-row,
+    .track-title,
+    .nav-item,
+    .btn-sq {
+        font-size: 14px;
+    }
+
+    .track-art,
+    .track-art-placeholder {
+        width: 44px;
+        height: 44px;
+    }
+
+    .btn-sq {
+        height: 44px;
+    }
+
+    .bottom-filler {
+        min-height: 440px;
+    }
+
+    .footer {
+        font-size: 15px;
+    }
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     body {
