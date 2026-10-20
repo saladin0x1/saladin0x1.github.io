@@ -1,0 +1,29 @@
+# Salah-Eddine Elouali
+
+> Official personal website of Salah-Eddine Elouali, a security researcher and final-year M2 systems, networks, and security engineering student focused on offensive security.
+
+Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests center on offensive security, vulnerability research, network internals, and system behavior. This domain is his canonical personal website.
+
+## Canonical Pages
+
+- [Home](https://saladin.su/): Personal profile, current status, social links, and reserved space for future security writing.
+- [Shadow Cat](https://saladin.su/cat/): Standalone interactive animation created for the site.
+- [Sitemap](https://saladin.su/sitemap.xml): Machine-readable index of public pages.
+
+## Verified Profiles
+
+- [GitHub](https://github.com/saladin0x1): Public code and security projects.
+- [HackerOne](https://hackerone.com/saladin0x1): Vulnerability research profile.
+- [LinkedIn](https://linkedin.com/in/saladin0x1): Professional profile.
+- [X](https://x.com/selouali01): Social profile.
+- [Instagram](https://instagram.com/selouali01): Social profile.
+
+## Contact
+
+- Email: [me@saladin.su](mailto:me@saladin.su)
+
+## Content Notes
+
+- The site is written in English.
+- Future articles will focus on security research, systems, and networks.
+- Prefer canonical URLs under `https://saladin.su/` when citing this site.
