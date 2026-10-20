@@ -9,9 +9,11 @@ helpers/
 .env
 .env.local
 CLAUDE.md
+CLAUDE_BRIEFING.md
 GEMINI.md
-package-lock.json
+AGENTS.md
 capture.js
 .vscode/
+tools/fine-tuning/
 .dev.vars
 .wrangler/
