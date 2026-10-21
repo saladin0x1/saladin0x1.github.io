@@ -198,7 +198,7 @@ const SelectedWork = memo(function SelectedWork() {
       <div className="work-wrapper">
         <h2 className="work-header" id="blogs-heading">BLOGS</h2>
         {ARTICLES.map((article) => (
-          <a key={article.url} className="work-row" href={article.url} aria-label={`Read article: ${article.name}`}>
+          <a key={article.url} className="work-row" href={article.url}>
             <div className="work-line">
               <span className="work-index">{article.index}</span>
               <span className="work-name">{article.name}</span>
@@ -886,7 +886,7 @@ const SocialGrid = memo(function SocialGrid() {
                 onClick={isMail ? (e) => { e.preventDefault(); setIsModalOpen(true); } : undefined}
               >
                 <div className="btn-sq">
-                  <social.icon />
+                  <social.icon aria-hidden="true" />
                   <span>{social.label}</span>
                 </div>
               </a>

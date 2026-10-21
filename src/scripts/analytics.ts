@@ -24,6 +24,7 @@ function loadAnalytics(): Promise<AnalyticsClient | null> {
         capture_pageview: true,
         capture_pageleave: true,
         autocapture: false,
+        disable_session_recording: true,
       });
       client = posthog;
       return client;
