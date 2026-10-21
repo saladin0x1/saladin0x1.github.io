@@ -311,7 +311,7 @@ return Craft::createObject([   // ← attacker-controlled config reaches Yii
     <h2><span class="no">03</span>The blind spot</h2>
     <p>You don't bypass this sanitizer with encoding tricks or unicode magic. You just put the payload in a format the sanitizer doesn't inspect. It's like a security guard who checks your backpack but not your jacket, because the policy says <em>check backpacks</em>.</p>
     <p>The JSON can contain anything — including the exact <code>as rce</code> and <code>on *</code> keys the sanitize was designed to remove. It gets decoded and merged back in <em>after</em> the boundary. Without re-cleansing.</p>
-    <p>It was 3AM. I laughed so hard.</p>
+    <p>It was 3AM.</p>
     <p>I rebuilt the canary for the JSON variant. Direct array version: stripped, working as intended. JSON-smuggled version: Yii threw <em>class not found</em> — meaning my nonexistent behavior class had reached the framework's object hydration. The bypass was confirmed before a single line of exploit code existed.</p>
 
     <h2><span class="no">04</span>Four boring classes</h2>
