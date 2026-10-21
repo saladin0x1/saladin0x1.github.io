@@ -13,6 +13,7 @@ Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests ce
 ## Writing
 
 - [CleanseMeMaybe — Craft CMS RCE via condition.config](https://saladin.su/articles/cleanse-me-maybe/): How a JSON string walked past Craft CMS's config sanitizer. CVE-2026-78416, CVSS 8.8, fixed in Craft CMS 5.10.6 / 4.18.2.
+- [Flat-Pack Security — redacted SQL injection to RCE case file](https://saladin.su/articles/flat-pack-security/): How an unauthenticated forgot-password SQL injection became OS command execution across three markets, followed by a 71-day bounty wait. Vendor identifiers and sensitive evidence are redacted.
 
 ## Verified Profiles
 

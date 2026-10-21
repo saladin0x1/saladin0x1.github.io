@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>Flat-Pack Security — A Redacted Case File | saladin.su</title>
+  <meta name="description" content="How a forgot-password form, one apostrophe, and a database that answered back turned into unauthenticated RCE at a furniture retailer across three countries — and a 71-day wait for the word congratulations. Fully redacted case file.">
+  <meta name="author" content="Salah-Eddine Elouali">
+  <link rel="canonical" href="https://saladin.su/articles/flat-pack-security/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://saladin.su/articles/flat-pack-security/">
+  <meta property="og:title" content="Flat-Pack Security — A Redacted Case File">
+  <meta property="og:description" content="Unauthenticated SQL injection to RCE at a furniture retailer, in three countries, by accident. A comedy in eleven acts.">
+  <meta property="og:image" content="https://saladin.su/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flat-Pack Security — A Redacted Case File">
+  <meta name="twitter:description" content="Unauthenticated SQL injection to RCE at a furniture retailer, in three countries, by accident. A comedy in eleven acts.">
+  <link rel="preload" href="/fonts/space-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  (function(){
+    var boot=function(){ posthog.init('phc_wsYCAzHQBnBMUgHhE3LRDva4bZd11F5nFrwJDp6o51L',{api_host:'https://eu.i.posthog.com',disable_session_recording:true}); };
+    if('requestIdleCallback' in window){ requestIdleCallback(boot,{timeout:3000}); } else { window.addEventListener('load',boot); }
+  })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Flat-Pack Security — A Redacted Case File",
+    "description": "Unauthenticated SQL injection to RCE at a furniture retailer, in three countries, by accident. A comedy in eleven acts.",
+    "datePublished": "2026-10-21",
+    "author": {
+      "@type": "Person",
+      "name": "Salah-Eddine Elouali",
+      "url": "https://saladin.su/",
+      "sameAs": ["https://github.com/saladin0x1", "https://hackerone.com/saladin0x1"]
+    },
+    "mainEntityOfPage": "https://saladin.su/articles/flat-pack-security/",
+    "publisher": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" }
+  }
+  </script>
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #000; }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: #c9c9c9;
+      font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: url('/noise.png') repeat;
+      opacity: 0.035;
+    }
+
+    a { color: #9a9a9a; text-decoration-color: #3a3a3a; text-underline-offset: 5px; transition: color .2s ease, text-decoration-color .2s ease; }
+    a:hover, a:focus-visible { color: #fff; text-decoration-color: #9a9a9a; outline: none; }
+
+    .back { position: fixed; top: 26px; left: clamp(20px, 5vw, 56px); z-index: 10; font-size: 12px; letter-spacing: .1em; text-decoration: none; color: #666; }
+    .back:hover { color: #d8d8d8; }
+
+    article { max-width: 74ch; margin: 0 auto; padding: clamp(90px, 14vh, 150px) clamp(22px, 6vw, 40px) 90px; }
+
+    .eyebrow { margin: 0 0 26px; color: #666; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+
+    h1 { margin: 0; color: #e6e6e6; font-size: clamp(34px, 5.5vw, 56px); font-weight: 400; letter-spacing: -.04em; line-height: 1.05; }
+
+    .dek { margin: 22px 0 0; max-width: 54ch; color: #8f8f8f; font-size: 15px; line-height: 1.7; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 34px 0 0; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.09); border-bottom: 1px solid rgba(255,255,255,.09); color: #6f6f6f; font-size: 11.5px; letter-spacing: .06em; }
+
+    .tldr { margin: 44px 0 0; padding: 22px 24px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.015); }
+    .tldr h2 { margin: 0 0 14px; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .tldr ul { margin: 0; padding: 0; list-style: none; }
+    .tldr li { position: relative; padding: 5px 0 5px 20px; color: #a8a8a8; font-size: 13.5px; line-height: 1.65; }
+    .tldr li::before { content: '·'; position: absolute; left: 4px; color: #555; }
+
+    h2 { margin: 72px 0 0; color: #dcdcdc; font-size: 21px; font-weight: 400; letter-spacing: -.02em; }
+    h2 .no { color: #4a4a4a; margin-right: 14px; }
+
+    p { margin: 20px 0 0; }
+
+    pre { margin: 26px 0 0; padding: 18px 20px; overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-left: 2px solid rgba(255,255,255,.22); background: #070707; font-size: 12.5px; line-height: 1.65; color: #b5b5b5; }
+    code { font-family: inherit; }
+    p code, li code { color: #d0d0d0; font-size: .92em; }
+
+    .flow { margin: 26px 0 0; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.14); color: #a0a0a0; font-size: 12.5px; line-height: 2; white-space: pre; overflow-x: auto; }
+
+    .proof { margin: 26px 0 0; padding: 18px 20px; border: 1px solid rgba(255,255,255,.08); color: #9f9f9f; font-size: 12.5px; line-height: 1.8; }
+    .proof .out { color: #e0e0e0; }
+
+    .evidence-heading { margin: 54px 0 0; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .evidence-note { color: #727272; font-size: 12.5px; }
+    .evidence { margin: 28px 0 0; }
+    .evidence img { display: block; width: 100%; height: auto; border: 1px solid rgba(255,255,255,.1); background: #050505; }
+    .evidence--phone { max-width: 420px; }
+    .evidence figcaption { margin-top: 10px; color: #666; font-size: 11.5px; line-height: 1.65; }
+
+    table { width: 100%; margin: 26px 0 0; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    td { padding: 9px 12px 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
+    td:first-child { white-space: nowrap; color: #7d7d7d; }
+
+    blockquote { margin: 30px 0 0; padding-left: 20px; border-left: 2px solid rgba(255,255,255,.2); color: #8d8d8d; }
+
+    .closing { margin: 72px 0 0; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); color: #8d8d8d; }
+    .closing em { color: #cfcfcf; font-style: normal; }
+
+    .links { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 56px 0 0; padding: 22px 0 0; border-top: 1px solid rgba(255,255,255,.09); font-size: 12px; letter-spacing: .04em; }
+
+    @media (max-width: 600px) {
+      body { font-size: 14px; }
+      table { font-size: 12px; }
+      td:first-child { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← saladin.su</a>
+  <article>
+    <p class="eyebrow">Security Research — Redacted Case File — High (7.5)</p>
+    <h1>Flat-Pack Security</h1>
+    <p class="dek">How a forgot-password form, one apostrophe, and a database that answered back turned into unauthenticated remote code execution at a furniture retailer — in three countries — mostly by accident. A comedy in eleven acts.</p>
+    <div class="meta">
+      <span>Salah-Eddine Elouali</span>
+      <span>October 21, 2026</span>
+      <span>~10 min read</span>
+    </div>
+
+    <div class="tldr">
+      <h2>The short version</h2>
+      <ul>
+        <li>A loyalty-card API at a furniture retailer had a forgot-password endpoint that concatenated input straight into SQL</li>
+        <li>No authentication. No WAF. No rate limiting. The database user was <code>sa</code>. Yes, that <code>sa</code></li>
+        <li>Boolean-blind confirmation → error-based extraction → <code>xp_cmdshell</code> → OS command execution</li>
+        <li>~96,000 customer records in one market; the same bug then found in two more countries</li>
+        <li>The server died mid-engagement, which made triage… philosophical</li>
+        <li>Fixed, retested, hardened. Bounty eventually granted — 71 days after resolution</li>
+        <li>All identifiers removed; the retailer shall remain nameless and, presumably, flat-packed</li>
+      </ul>
+    </div>
+
+    <h2><span class="no">01</span>The form that trusted everyone</h2>
+    <p>Every good intrusion starts with the most innocent feature on the site. Not the login. Not the payments. The <em>forgot password</em> form — the page nobody thinks about, guarded by nobody, maintained by someone who left in 2021.</p>
+    <p>This one belonged to a furniture retailer's loyalty-card program. You typed your card number, and if it existed, the API sent an OTP to the registered phone. Simple. Friendly. Trusting.</p>
+    <p>It trusted me immediately. No authentication to reach it. No WAF in front of it. No rate limiting on it. The only security control I could identify was, as far as I can tell, optimism.</p>
+    <p>The card numbers were sequential. Thirteen digits, in order, like library indexes for humans. Keep that detail in your pocket — it comes back in act eight.</p>
+
+    <h2><span class="no">02</span>One apostrophe</h2>
+    <p>You know the ritual. You send an apostrophe and see if the server flinches. The trick here was figuring out <em>how</em> it flinches, because the response was always JSON with a polite <code>status</code> field.</p>
+    <p>So I ran a boolean-blind differential — same request, two conditions:</p>
+    <pre><code>{"userName":"XXXXXXXX0643' AND '1'='1"}   →  status: true
+{"userName":"XXXXXXXX0643' AND '1'='2"}   →  status: false</code></pre>
+    <p>The endpoint had essentially become a SQL oracle that graded my homework over HTTP. Correct query: the server happily fires an OTP SMS to a stranger's phone. Wrong query: "Invalid Mobile number."</p>
+    <p>Which means every boolean test I ran texted a real customer a password reset code. I would like to formally apologize to whoever owns that number. Your government owes you an SMS.</p>
+
+    <h2><span class="no">03</span>The database snitches on itself</h2>
+    <p>Boolean blind is slow. One bit per request is a hobby; I wanted throughput. Then I remembered SQL Server's most underrated feature: <code>THROW</code>.</p>
+    <p>You can put a query result into a variable and throw it as the error message — and this API, being the chatty type, reflected error messages straight into the JSON response:</p>
+    <pre><code>{"userName":"'; DECLARE @v NVARCHAR(4000)=
+  (SELECT TOP 1 name FROM sys.databases); THROW 50000,@v,1; --"}</code></pre>
+    <p>Response: <code>{"message":"MainFamilyCardDb_Prod"}</code></p>
+    <p>I didn't exfiltrate data. The server volunteered it. Enthusiastically. One request per fact, full sentences, error-message delivery — the database equivalent of a suspect confessing because nobody told him he could stay quiet.</p>
+    <p>In a handful of requests it told me: eight databases lived on that box, production and staging <em>together</em>, plus the background-job database, the failed-sync database, and the system databases. And in the main one, thirty-one tables — including <code>Customers</code> with 95,994 rows.</p>
+    <p>What was in <code>Customers</code>? Name, birth date, national civil ID, address, phone, email, income bracket, number of children. And the passwords.</p>
+    <p>Base64-encoded.</p>
+    <p>Which is a cipher in the same way a paper bag is a safe. I decoded one — the admin account — and the plaintext contained the company's own name. The strongest obfuscation on the premises was the hope that nobody would try <code>base64 -d</code>.</p>
+
+    <h2><span class="no">04</span>sa, obviously</h2>
+    <p>The connection was running as <code>sa</code>. Sysadmin. Every server role. The database wasn't just open — it was <em>governed</em> by the user account equivalent of a skeleton key taped to the door.</p>
+    <p>Which meant the classic finisher was available: enable <code>xp_cmdshell</code> via stacked queries.</p>
+    <pre><code>'; EXEC sp_configure 'show advanced options', 1; RECONFIGURE;
+   EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE; --</code></pre>
+    <p>One wrinkle: connection pooling meant my stacked queries landed on random connections and often died mid-ritual. So the write step became a spray — fire the same INSERT thirty times, let one or two survive:</p>
+    <div class="flow">for i in 1..30:
+  POST  '; SET NOCOUNT ON; INSERT INTO SomeLookupTable(Word)
+        EXEC master..xp_cmdshell 'whoami'; --
+  (most attempts evaporate; one sticks)</div>
+    <p>Then read it back with a single <code>THROW</code>, which always worked, because reading is apparently a protected right on this server while writing is an extreme sport.</p>
+
+    <h2><span class="no">05</span>whoami</h2>
+    <div class="proof">INSERT … EXEC xp_cmdshell 'whoami'
+<span class="out">nt service\mssql$sqlexpress</span></div>
+    <p>Command execution. As the SQL Server service account, on a Windows box, domain-joined, sitting on a hypervisor, in an internal /24 with a dozen neighbors including — the inventory said — domain controllers.</p>
+    <p>At this point the impact section of the report wrote itself. I just held the pen.</p>
+
+    <h3 class="evidence-heading">Evidence, redacted</h3>
+    <p class="evidence-note">Every identifying domain, host, account, phone number, OTP, route, credential, and customer detail has been removed. The screenshots below are the original evidence otherwise.</p>
+    <figure class="evidence">
+      <img src="evidence-terminal.webp" width="1920" height="925" loading="lazy" decoding="async" alt="Redacted terminal output showing xp_cmdshell returning the SQL Server service account">
+      <figcaption>Exhibit A — <code>THROW → xp_cmdshell → whoami</code>. Target identifiers and the terminal footer are removed.</figcaption>
+    </figure>
+    <figure class="evidence evidence--phone">
+      <img src="evidence-phone.webp" width="750" height="1334" loading="lazy" decoding="async" alt="Redacted phone screenshot showing OTP messages and a controlled SMS gateway confirmation">
+      <figcaption>Exhibit B — OTP trail and controlled gateway confirmation on my phone. Sender identity, sender code, OTPs, and URLs are removed.</figcaption>
+    </figure>
+    <figure class="evidence">
+      <img src="evidence-sms.webp" width="1250" height="400" loading="lazy" decoding="async" alt="Redacted SMS gateway dashboard with message records and purchase history">
+      <figcaption>Exhibit C — Gateway panel after controlled validation. Provider branding, recipients, and audit content are removed.</figcaption>
+    </figure>
+
+    <h2><span class="no">06</span>The server dies</h2>
+    <p>Here is where the engagement went from security research to situation comedy.</p>
+    <p>While scoping further, the web service stopped responding. Port 443: nothing. But ICMP still answered — the machine was alive; the service was gone. The diagnosis: SQL Server <em>Express</em> — free edition, famously capped at ~1.4 GB of memory — had met my enumeration queries and chosen death. A single unauthenticated request could exhaust it. Unintentional denial of service, achieved by accident, through the same front door.</p>
+    <p>Two days later, the triage analyst on the platform messaged me:</p>
+    <blockquote>"The request never gives a response for me. Is this still reproducible?"</blockquote>
+    <p>My brother in cyber. The server is down. That <em>is</em> the reproduction. Your evidence that the vulnerability exists is that the vulnerability has eaten the service. I wrote back, professionally, explaining that the outage itself was a finding — and please escalate, because to everyone involved, the sound of a production database quietly asphyxiating was apparently indistinguishable from a slow Tuesday.</p>
+    <p>I also tried to reach the retailer's tech team through professional networking sites. Nothing. The outage continued, unacknowledged, for days. Somewhere out there was a furniture company whose loyalty app was down and whose monitoring solution was, I can only assume, a decorative plant.</p>
+
+    <h2><span class="no">07</span>It's contagious</h2>
+    <p>While waiting for the corpse to be revived, I checked something. This retailer operates the same loyalty platform in multiple countries. Same codebase, deployed per market.</p>
+    <p>So I looked at a second country. Their instance sat behind a cloud WAF — a real one, with rules. But the WAF protected the domain, and the origin server behind it accepted requests directly if you knew its IP. No origin access control at all.</p>
+    <p>The bouncer was strict. The back door was a revolving one.</p>
+    <p>That instance had a WAF-filtered input, so spaces got eaten — and SQL Server, ever helpful, accepts <code>/**/</code> as whitespace:</p>
+    <pre><code>{"username":"')AND(1)=CONVERT(int,(SELECT/**/name/**/FROM/**/sys.databases/**/FOR/**/XML/**/PATH))--"}</code></pre>
+    <p>One request. Twenty-nine databases, in one error message, gift-wrapped. Also running as <code>sa</code>, because consistency is a virtue.</p>
+    <figure class="evidence">
+      <img src="evidence-dbs.webp" width="1920" height="812" loading="lazy" decoding="async" alt="Redacted terminal evidence of a one-request database enumeration">
+      <figcaption>Exhibit D — One error response returned twenty-nine database names. The Host header, origin address, route, and database names are removed.</figcaption>
+    </figure>
+    <p>Third country: same. Two vulnerable endpoints, seventeen databases, WAF bypassed the same way. Grand total across markets: north of half a million customer records behind one apostrophe.</p>
+    <p>I want to be clear that finding the same critical bug three times in a row is not skill. It's the security equivalent of checking every drawer in the kitchen because the first one was full of cash.</p>
+
+    <h2><span class="no">08</span>The fix, the re-fix, and the re-re-fix</h2>
+    <p>To their credit — and they deserve it — the vendor's team engaged fast, across all three markets at once, and patched the injection. Then I retested. Reader, the injection was gone.</p>
+    <p>The forgot-password endpoint, however, had developed a new personality. POST a valid card number now, and it returned the <em>entire customer profile</em>: name, civil ID, income bracket, children, address — unauthenticated. And remember those sequential card numbers from act one? I tested nine adjacent numbers. Eight returned complete profiles. The database could be enumerated without any injection at all — just a for-loop and patience. Each request also triggered a real OTP SMS to a real customer, so a full sweep would have texted ~96,000 people a password reset they didn't ask for.</p>
+    <p>Other highlights from the post-patch tour:</p>
+    <table aria-label="Post-patch findings">
+      <thead><tr><th>Finding</th><th>Status at retest</th></tr></thead>
+      <tbody>
+        <tr><td>UAT API on the production domain</td><td>Live, with full stack traces including developer folder paths</td></tr>
+        <tr><td><code>/info</code> endpoint</td><td>Disclosing the full controller map and DB connection pattern</td></tr>
+        <tr><td>Source maps in prod bundles</td><td>Whole React app browsable, config in cleartext</td></tr>
+        <tr><td>CORS</td><td><code>*</code> — the shrug emoji of HTTP headers</td></tr>
+        <tr><td>SMS gateway creds in a config table</td><td>Present; sender name unrestricted; endpoint over plain HTTP</td></tr>
+      </tbody>
+    </table>
+    <p>That SMS gateway one deserves a sentence: anyone with those credentials could text any customer as the brand, because the sender name field accepted anything. Phishing pre-installed.</p>
+    <p>The team fixed all of it. Every round. I'd file it, they'd patch it, I'd verify. After the final sweep I told them the deployment was production-grade and hardened past the generic pentester bar, which was true, and which remains the politest thing I have ever said about a CORS header that used to be an asterisk.</p>
+
+    <h2><span class="no">09</span>The severity rollercoaster</h2>
+    <p>Meanwhile, the platform side of the story was doing its own thing.</p>
+    <p>The report went in as Critical 9.8 — unauth SQLi to RCE to half a million records tends to read that way. First committee touch: <em>Medium</em>. No explanation. Just the number, dropping five floors like an elevator with a personality disorder.</p>
+    <p>I asked why. The answer, in full, was a link to the CVSS calculator with a vector that scored 7.5. Not a sentence before it. Not a sentence after it. Just mathematics, deployed like a smoke bomb.</p>
+    <p>For the record: the vector assumed no RCE and no integrity impact, on a chain where I had executed OS commands as a sysadmin service account. But I accepted it without complaint and kept helping, because the math was technically load-bearing and the vendor team was genuinely fixing things. You pick your battles. This one I filed under "losses, educational."</p>
+
+    <h2><span class="no">10</span>A yes, a no, or a date</h2>
+    <p>The report was marked resolved on April 20. The program's policy mentioned rewards for high/critical findings, and a committee would review it. Monthly, they said.</p>
+    <p>Day 43: still waiting. Day 65: still waiting, and I said so, ending with the sentence I remain proudest of in this entire engagement:</p>
+    <blockquote>"A yes, a no, or a date. That's all I'm asking."</blockquote>
+    <p>On day 71, a notification arrived. <em>"Congratulations! A reward has been granted."</em> No amount. No explanation. Just the door opening a crack, a hand extending an envelope, and the door closing again.</p>
+    <p>Which is how security research actually works: weeks of silence, one dramatic table flip from a database, a severity that travels by elevator, and then — 71 days late — a single word that makes the whole thing worth it.</p>
+
+    <h2><span class="no">11</span>What I keep</h2>
+    <p>The technical lessons are the standard liturgy, and they're true, so sing along: parameterize your queries. Least-privilege your database users. Never run staging and production on the same box. Never base64 a password. Put the WAF's origin behind access control. Rate-limit the form that texts strangers.</p>
+    <p>The other lesson is less standard: the funniest vulnerabilities aren't the exotic ones. They're the ones where every individual decision was sort of reasonable and the assembled result is a customer loyalty program that answers your SQL questions by text message. Flat-pack furniture comes with an Allen key and fourteen steps. This came with no tools and one step, and somewhere in the middle of assembly the whole thing gained sentience and started telling me its admin password.</p>
+
+    <p class="closing"><em>Flat-Pack Security.</em> Some assembly required. Batteries — apparently — not included.</p>
+
+    <nav class="links" aria-label="References">
+      <a href="/articles/cleanse-me-maybe/">Previous case file: CleanseMeMaybe</a>
+      <a href="https://hackerone.com/saladin0x1">HackerOne</a>
+      <a href="/">saladin.su</a>
+    </nav>
+  </article>
+  <!-- Cloudflare Web Analytics -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3172d3151b5647eda6e971e2b390e66c"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+</body>
+</html>

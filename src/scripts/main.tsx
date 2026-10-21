@@ -190,6 +190,12 @@ const ARTICLES = [
     meta: 'CVE-2026-78416 · RCE',
     url: '/articles/cleanse-me-maybe/',
   },
+  {
+    index: '02',
+    name: 'Flat-Pack Security',
+    meta: 'SQLi → RCE · CASE FILE',
+    url: '/articles/flat-pack-security/',
+  },
 ];
 
 const SelectedWork = memo(function SelectedWork() {
