@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>Origin of Evil: A Redacted Case File | saladin.su</title>
+  <meta name="description" content="A chat widget guarded its postMessage handlers with an origin check that was true for almost everyone. One missing negation, an SVG namespace XSS payload, and an attack that violated no RFC. A redacted case file.">
+  <meta name="author" content="Salah-Eddine Elouali">
+  <link rel="canonical" href="https://saladin.su/articles/origin-of-evil/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://saladin.su/articles/origin-of-evil/">
+  <meta property="og:title" content="Origin of Evil: A Redacted Case File">
+  <meta property="og:description" content="One missing negation turned an origin check into an open door. The attack violated no standard. That was the problem.">
+  <meta property="og:image" content="https://saladin.su/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Origin of Evil: A Redacted Case File">
+  <meta name="twitter:description" content="One missing negation turned an origin check into an open door. The attack violated no standard. That was the problem.">
+  <link rel="preload" href="/fonts/space-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  (function(){
+    var boot=function(){ posthog.init('phc_wsYCAzHQBnBMUgHhE3LRDva4bZd11F5nFrwJDp6o51L',{api_host:'https://eu.i.posthog.com'}); };
+    if('requestIdleCallback' in window){ requestIdleCallback(boot,{timeout:3000}); } else { window.addEventListener('load',boot); }
+  })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Origin of Evil: A Redacted Case File",
+    "description": "One missing negation turned an origin check into an open door. The attack violated no standard. That was the problem.",
+    "datePublished": "2026-10-22",
+    "author": {
+      "@type": "Person",
+      "name": "Salah-Eddine Elouali",
+      "url": "https://saladin.su/",
+      "sameAs": ["https://github.com/saladin0x1", "https://hackerone.com/saladin0x1"]
+    },
+    "mainEntityOfPage": "https://saladin.su/articles/origin-of-evil/",
+    "publisher": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" }
+  }
+  </script>
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #000; }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: #c9c9c9;
+      font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: url('/noise.png') repeat;
+      opacity: 0.035;
+    }
+
+    a { color: #9a9a9a; text-decoration-color: #3a3a3a; text-underline-offset: 5px; transition: color .2s ease, text-decoration-color .2s ease; }
+    a:hover, a:focus-visible { color: #fff; text-decoration-color: #9a9a9a; outline: none; }
+
+    .back { position: fixed; top: 26px; left: clamp(20px, 5vw, 56px); z-index: 10; font-size: 12px; letter-spacing: .1em; text-decoration: none; color: #666; }
+    .back:hover { color: #d8d8d8; }
+
+    article { max-width: 74ch; margin: 0 auto; padding: clamp(90px, 14vh, 150px) clamp(22px, 6vw, 40px) 90px; }
+
+    .eyebrow { margin: 0 0 26px; color: #666; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+
+    h1 { margin: 0; color: #e6e6e6; font-size: clamp(34px, 5.5vw, 56px); font-weight: 400; letter-spacing: -.04em; line-height: 1.05; }
+
+    .dek { margin: 22px 0 0; max-width: 56ch; color: #8f8f8f; font-size: 15px; line-height: 1.7; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 34px 0 0; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.09); border-bottom: 1px solid rgba(255,255,255,.09); color: #6f6f6f; font-size: 11.5px; letter-spacing: .06em; }
+
+    .tldr { margin: 44px 0 0; padding: 22px 24px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.015); }
+    .tldr h2 { margin: 0 0 14px; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .tldr ul { margin: 0; padding: 0; list-style: none; }
+    .tldr li { position: relative; padding: 5px 0 5px 20px; color: #a8a8a8; font-size: 13.5px; line-height: 1.65; }
+    .tldr li::before { content: '·'; position: absolute; left: 4px; color: #555; }
+
+    h2 { margin: 72px 0 0; color: #dcdcdc; font-size: 21px; font-weight: 400; letter-spacing: -.02em; }
+    h2 .no { color: #4a4a4a; margin-right: 14px; }
+
+    h3 { margin: 48px 0 0; color: #c4c4c4; font-size: 16px; font-weight: 400; letter-spacing: .01em; }
+
+    p { margin: 20px 0 0; }
+
+    pre { margin: 26px 0 0; padding: 18px 20px; overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-left: 2px solid rgba(255,255,255,.22); background: #070707; font-size: 12.5px; line-height: 1.65; color: #b5b5b5; }
+    code { font-family: inherit; }
+    p code, li code { color: #d0d0d0; font-size: .92em; }
+
+    .flow { margin: 26px 0 0; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.14); color: #a0a0a0; font-size: 12.5px; line-height: 2; white-space: pre; overflow-x: auto; }
+
+    .proof { margin: 26px 0 0; padding: 18px 20px; border: 1px solid rgba(255,255,255,.08); color: #9f9f9f; font-size: 12.5px; line-height: 1.8; }
+    .proof .out { color: #e0e0e0; }
+
+    table { width: 100%; margin: 26px 0 0; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    td { padding: 9px 12px 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
+    td:first-child { white-space: nowrap; color: #7d7d7d; }
+
+    blockquote { margin: 30px 0 0; padding-left: 20px; border-left: 2px solid rgba(255,255,255,.2); color: #8d8d8d; }
+
+    .refs { margin: 30px 0 0; padding: 0; list-style: none; }
+    .refs li { position: relative; padding: 6px 0 6px 22px; color: #a0a0a0; font-size: 12.5px; line-height: 1.7; }
+    .refs li::before { content: '§'; position: absolute; left: 2px; color: #4a4a4a; }
+
+    .closing { margin: 72px 0 0; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); color: #8d8d8d; }
+    .closing em { color: #cfcfcf; font-style: normal; }
+
+    .links { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 56px 0 0; padding: 22px 0 0; border-top: 1px solid rgba(255,255,255,.09); font-size: 12px; letter-spacing: .04em; }
+
+    @media (max-width: 600px) {
+      body { font-size: 14px; }
+      table { font-size: 12px; }
+      td:first-child { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← saladin.su</a>
+  <article>
+    <p class="eyebrow">Security Research · Redacted Case File · DOM XSS</p>
+    <h1>Origin of Evil</h1>
+    <p class="dek">A chat widget on a furniture retailer's storefronts guarded its most dangerous functions with an origin check that was true for almost everyone. One missing negation opened it. Behind it sat an XSS sink inside an SVG, a bridge to document.cookie, and an attack whose every layer was fully compliant with the RFCs that govern the internet. No standard was violated. That was the problem.</p>
+    <div class="meta">
+      <span>Salah-Eddine Elouali</span>
+      <span>October 22, 2026</span>
+      <span>~9 min read</span>
+    </div>
+
+    <div class="tldr">
+      <h2>The short version</h2>
+      <ul>
+        <li>A third-party chat widget, embedded on a furniture retailer's country storefronts, listens for <code>postMessage</code> from "trusted" origins</li>
+        <li>The trust check is <code>~event.origin.indexOf(SERVER_URL)</code>, which is true for any hostname that begins with the vendor's</li>
+        <li>Behind the check: a route to <code>innerHTML</code> (DOM XSS), a route to <code>document.cookie</code> (arbitrary cookie injection, session fixation), <code>localStorage</code> writes, and co-browse steering</li>
+        <li>A trusted-looking origin costs $0 and two minutes: wildcard DNS plus a free ACME certificate. RFCs 1034, 1035, 6454, 8555 and the CA/Browser Forum rules forbid none of it</li>
+        <li>The XSS payload had to be valid SVG with an HTML integration point, because the sink was an <code>&lt;svg:text&gt;</code> element</li>
+        <li>No CSP on the storefronts. Ultimately fixed by removing the widget entirely</li>
+      </ul>
+    </div>
+
+    <h2><span class="no">01</span>The widget</h2>
+    <p>Third-party chat widgets are the appendix of the modern storefront. Embedded by procurement, forgotten by engineering, and capable of spectacular inflammation. This one came from a chat vendor and was embedded on a furniture retailer's country storefronts. It ships a <code>postMessage</code> listener so that the vendor's iframe and the host page can talk to each other.</p>
+    <p>Here is the listener, from the live bundle. Read the comment slowly. The comment understands the assignment:</p>
+    <pre><code>window.addEventListener('message', function(event) {
+    // IMPORTANT: Check the origin of the data!
+    if (~event.origin.indexOf(SERVER_URL)) {   // e.g. https://chat.vendor.example</code></pre>
+    <p>The comment says: check the origin. The code performs a ritual that resembles checking the origin. The two agree the way a CLOSED sign agrees with an open door: textually, not functionally.</p>
+
+    <h2><span class="no">02</span>One character</h2>
+    <p>Old JavaScript hands will recognize the species. Before <code>String.prototype.includes</code> existed, the idiom was:</p>
+    <pre><code>if (!~haystack.indexOf(needle)) {
+    // not found
+}</code></pre>
+    <p>The tilde is bitwise NOT. In two's complement arithmetic, <code>~x === -x - 1</code>. <code>indexOf</code> returns <code>-1</code> on miss and a position <code>≥ 0</code> on hit, so:</p>
+    <table aria-label="Truthiness of ~indexOf">
+      <thead><tr><th>Expression</th><th>Value</th><th>Boolean</th></tr></thead>
+      <tbody>
+        <tr><td><code>~(-1)</code>, not found</td><td><code>0</code></td><td>false</td></tr>
+        <tr><td><code>~(0)</code>, found at index 0</td><td><code>-1</code></td><td>true</td></tr>
+        <tr><td><code>~(k)</code>, any k ≥ 0</td><td>negative</td><td>true</td></tr>
+      </tbody>
+    </table>
+    <p>The negation <code>!</code> was the entire point of the idiom. It flipped "found" into the branch. Someone kept the tilde, kept the incantation, and dropped the meaning:</p>
+    <pre><code>if (~event.origin.indexOf(SERVER_URL))</code></pre>
+    <p>This is false in exactly one case: when the vendor's URL appears nowhere in the origin string. Any origin that contains it anywhere passes. And since origins serialize as <code>scheme://host[:port]</code> (RFC 6454, section 6.2), "contains it at index 0" means "any hostname that begins with the vendor's."</p>
+    <p>One character. The entire access-control model of a widget deployed on production storefronts was one missing <code>!</code>.</p>
+    <p>Notice the asymmetry, because it is delicious. <code>indexOf</code> needs the needle at position zero, so the vendor's own sibling subdomain, <code>api.chat.vendor.example</code>, fails the check: its origin begins with "api.", not with the needle. The check is simultaneously too permissive for strangers and too strict for its own relatives. That is not a security policy. That is a mood.</p>
+
+    <h2><span class="no">03</span>Behind the gate</h2>
+    <p>The handler dispatches on <code>event.data.event_id</code>. The event catalog is a wishlist:</p>
+    <table aria-label="postMessage sinks">
+      <thead><tr><th>event_id</th><th>Sink</th><th>Consequence</th></tr></thead>
+      <tbody>
+        <tr><td><code>agent_unread_message</code></td><td><code>innerHTML</code> of the notification badge, an SVG <code>&lt;text&gt;</code></td><td>DOM XSS on the storefront origin</td></tr>
+        <tr><td><code>set_cookie</code></td><td><code>easychat_set_cookie(name, value, expiry, path)</code></td><td>Arbitrary cookie injection, including the widget's JS-managed chat session ID. Session fixation.</td></tr>
+        <tr><td><code>set_local_storage</code></td><td>Arbitrary <code>localStorage</code> write</td><td>Persistence, state poisoning</td></tr>
+        <tr><td><code>initialize-cobrowse</code> and friends</td><td>Co-browse and agent flows</td><td>Victim steered into attacker-chosen sessions</td></tr>
+      </tbody>
+    </table>
+    <p>A message meant to carry a notification count, literally a number, the most harmless datatype in computing, was wired to <code>innerHTML</code>. Neither storefront sends a <code>Content-Security-Policy</code> header. HSTS only. Once script executes, nothing on the page argues with it.</p>
+
+    <h2><span class="no">04</span>The payload crosses namespaces</h2>
+    <p>Here is the part most bug hunters have not met. The badge is not an HTML node. It lives inside an inline SVG:</p>
+    <pre><code>&lt;svg&gt;…&lt;text id="new-notification-count"&gt;&lt;/text&gt;…&lt;/svg&gt;</code></pre>
+    <p>Assign to an SVG element's <code>innerHTML</code> and the fragment parser continues in the SVG namespace. SVG has no <code>&lt;img&gt;</code>; it has <code>&lt;image&gt;</code>, and raw HTML inside SVG is inert. To get executable HTML you must route through an HTML integration point, <code>&lt;foreignObject&gt;</code>, and re-declare the HTML namespace explicitly:</p>
+    <pre><code>event_id: 'agent_unread_message',
+data: { message_count:
+  '&lt;foreignObject width="120" height="50"&gt;' +
+    '&lt;div xmlns="http://www.w3.org/1999/xhtml"&gt;' +
+      '&lt;img src=x onerror="alert(document.domain)"&gt;' +
+    '&lt;/div&gt;' +
+  '&lt;/foreignObject&gt;' }</code></pre>
+    <p>The payload is itself a small standards document. The <code>xmlns</code> declaration is load-bearing. If you ever wondered whether understanding XML namespaces would ever make you money: occasionally, yes.</p>
+
+    <h2><span class="no">05</span>Manufacturing a trusted origin, legally</h2>
+    <p>The check demands an origin beginning with the vendor's URL. Surely you cannot just obtain <code>https://chat.vendor.example.anything</code>. Surely someone, somewhere, checks whether you are entitled to a string.</p>
+    <p>Nobody checks. Not because a system failed, but because the systems work exactly as specified. Every layer was designed this way on purpose. With citations:</p>
+
+    <h3>DNS: your zone, your labels</h3>
+    <p>RFC 1035, section 2.3.1, constrains a DNS label's charset (letters, digits, hyphens) and length (63 octets). That is the complete list of constraints. There is no notion of reserved strings, no cross-zone semantics, no committee that asks whether your label spells someone else's hostname. RFC 1034, sections 3.1 and 4.2, defines the name space as a tree where authority begins at zone cuts and flows downward only. RFC 8499, section 7, the DNS terminology BCP, says the same thing in modern words: a zone is a contiguous subtree under one authority. Dots inside your own zone are just label separators:</p>
+    <div class="flow">chat.vendor.example.192.0.2.10.sslip.io
+└── lives entirely inside the sslip.io zone
+    └── which answers by wildcard (RFC 1034 §4.3.3)
+        └── resolves to 192.0.2.10  →  my server</div>
+    <p>No registration. No policy gate. <code>sslip.io</code> and <code>nip.io</code> are ordinary DNS doing ordinary wildcard things; RFC 1034 section 4.3.3 is the whole magic trick. And 192.0.2.0/24 is TEST-NET-1, reserved for documentation by RFC 5737, so this article documents an attack using an address the IETF set aside for examples. Peak compliance.</p>
+
+    <h3>Origins: the serialization guarantees the prefix</h3>
+    <p>RFC 6454, section 6.2, defines the ASCII serialization of a web origin: <code>scheme "://" host [":" port]</code>. A hostname I control that begins with the vendor string produces an origin that begins with the vendor URL by construction, not by coincidence. The web's own origin format is the delivery mechanism for the bypass.</p>
+
+    <h3>TLS: certificate authorities validate control, never entitlement</h3>
+    <p>A matching hostname is useless over HTTPS without a certificate, and here the last hope of "surely someone checks" dies politely. RFC 8555, sections 8.3 and 9, define ACME, the Let's Encrypt protocol. Its challenges prove operational control of an identifier: http-01 answers a request on the name, dns-01 writes a TXT record for the name. Nowhere in the protocol is there a concept of a right to a string. The CA/Browser Forum Baseline Requirements, section 3.2.2, require domain validation for the certificate's names; trademark screening is not part of domain validation, and subdomains of a zone you control are simply your names. A free, valid certificate for the lookalike hostname arrives in about ninety seconds.</p>
+
+    <h3>Where a restriction would live, and why it does not apply</h3>
+    <table aria-label="Potential barriers and why they do not apply">
+      <thead><tr><th>Mechanism</th><th>Governs</th><th>Why it does not apply</th></tr></thead>
+      <tbody>
+        <tr><td>UDRP, trademark law</td><td>Registrable second-level domains</td><td>I registered nothing. The lookalike string is labels inside a zone I already control</td></tr>
+        <tr><td>Registrar reserved-word lists</td><td>New registrations under some TLDs</td><td>The wildcard DNS path involves no registration at all</td></tr>
+        <tr><td>Bug bounty program policy</td><td>In-scope testing behavior</td><td>The PoC ran on my own infrastructure, my own browser, benign payloads</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="no">06</span>The attack, assembled</h2>
+    <p>Total cost: zero dollars. Total time: about two minutes. Prerequisites: none. No vendor account, no dashboard access, no writes to anyone's infrastructure.</p>
+    <pre><code>// attacker page, served from the matching origin
+var victim = window.open('https://storefront.example-country/');
+
+function fire() {
+  // Stage 1: arbitrary cookie injection, works as soon as the listener exists
+  victim.postMessage({
+    event_id: 'set_cookie',
+    data: { cookie_name: 'f2_poc', cookie_value: 'injected', path: '/' }
+  }, '*');
+  // Stage 2: namespaced DOM XSS into the SVG badge
+  victim.postMessage({
+    event_id: 'agent_unread_message',
+    data: { message_count: foreignObjectPayload }
+  }, '*');
+}
+setTimeout(function(){ fire(); setInterval(fire, 4000); }, 3000);
+// retries, because the badge element only exists after the widget's XHRs settle</code></pre>
+    <div class="proof">Victim window, storefront origin
+<span class="out">alert("storefront.example-country | …cookies…")</span>
+DevTools, Application, Cookies
+<span class="out">f2_poc = injected   ← written by the storefront origin itself</span></div>
+    <p>Script execution on the storefront origin, plus the ability to plant and overwrite cookies, including the chat session identifier the widget itself sets from JavaScript. Session fixation stops being a theory and becomes a straight line. From there: DOM keylogging of anything typed on the page, in-place credential phishing, forced redirects. The storefront's own origin does the reputation laundering.</p>
+
+    <h2><span class="no">07</span>Not a duplicate</h2>
+    <p>A month earlier I had reported a sibling issue in the same widget family: a server-side flaw that let a vendor-side account inject JavaScript into other accounts' widgets. Different vulnerability class, different prerequisites. That one needed an account and performed writes. This one needs a DNS label and performs nothing on vendor systems. Both live bundles still contained this message handler at the time of reporting, comfortably surviving the earlier fix.</p>
+    <p>I documented the distinction with the patience of a man who has been told "duplicate" before. The report passed triage. Six weeks later the vendor asked me to retest. I checked the storefronts: the widget integration had been removed entirely. No iframe, no script reference, nothing left to audit. I replied that if removing the gadget was their way of securing it, they were welcome to close the report, because the vulnerability was certainly no longer present.</p>
+    <p>I mean that without irony. For a third-party widget, widget-ectomy is the most reliable fix there is. Every other option, the strict equality check, the textContent badge, the event allowlist, the CSP, requires the vendor to understand the bug. Removal requires only the ability to delete. Defense in depth, meet offense by subtraction.</p>
+    <p>For the record, the remediation wishlist:</p>
+    <pre><code>// 1. Strict origin equality; the whole fix is this line
+if (event.origin !== SERVER_URL) return;
+// 2. Never route postMessage data into innerHTML.
+//    A message count is a number: badge.textContent = String(count)
+// 3. Whitelist event_id values; type-check every field
+// 4. Delete the set_cookie bridge, or allowlist names
+//    and drop attacker-supplied path and expiry
+// 5. Audit every listener in the bundle family for the same tilde
+// 6. Storefront-side: deploy CSP (script-src 'self', no unsafe-inline)</code></pre>
+
+    <h2><span class="no">08</span>What I keep</h2>
+    <p>Lesson one is ancient and true: origins are not substrings. <code>indexOf</code>, <code>startsWith</code>, <code>includes</code>: all of them are stringly-typed trust. The only correct comparison for an origin is full-string equality, because an origin is not a string that happens to contain a host. It is a tuple, and tuples do not have prefixes.</p>
+    <p>Lesson two: code that comments its own security is aspirational literature. The comment knew. The comment always knows.</p>
+    <p>Lesson three is the one I will actually keep. When someone tells you an attack "surely cannot be allowed," you can often answer with the standards themselves. DNS does not police semantics; RFC 1035 polices charset. TLS does not police entitlement; RFC 8555 proves control. Origin serialization does not police prefixes; RFC 6454 just prints the tuple. Each layer worked exactly as documented, and the composition of three correct systems was an open door with a comment on it saying IMPORTANT. The attack violated no RFC. The RFCs were never asked to prevent it. Only the missing <code>!</code> was ever supposed to.</p>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li><a href="https://www.rfc-editor.org/rfc/rfc1034">RFC 1034</a>, Domain Names: Concepts and Facilities. Sections 3.1, 4.2 (name space authority), 4.3.3 (wildcards).</li>
+      <li><a href="https://www.rfc-editor.org/rfc/rfc1035">RFC 1035</a>, Domain Names: Implementation and Specification. Section 2.3.1, preferred name syntax.</li>
+      <li><a href="https://www.rfc-editor.org/rfc/rfc5737">RFC 5737</a>, IPv4 Address Blocks Reserved for Documentation. TEST-NET-1, 192.0.2.0/24.</li>
+      <li><a href="https://www.rfc-editor.org/rfc/rfc6454">RFC 6454</a>, The Web Origin Concept. Section 6.2, ASCII serialization of an origin.</li>
+      <li><a href="https://www.rfc-editor.org/rfc/rfc8499">RFC 8499</a>, DNS Terminology. Section 7, zones.</li>
+      <li><a href="https://www.rfc-editor.org/rfc/rfc8555">RFC 8555</a>, Automatic Certificate Management Environment (ACME). Sections 8.3 and 9, validation challenges.</li>
+      <li><a href="https://cabforum.org/baseline-requirements-documents/">CA/Browser Forum Baseline Requirements</a>. Section 3.2.2, domain validation.</li>
+    </ul>
+
+    <p class="closing"><em>Origin of Evil.</em> Every character was exactly where the specification said it should be. That is what made it evil.</p>
+
+    <nav class="links" aria-label="References">
+      <a href="/articles/flat-pack-security/">Previous case file: Flat-Pack Security</a>
+      <a href="/articles/cleanse-me-maybe/">CleanseMeMaybe</a>
+      <a href="https://hackerone.com/saladin0x1">HackerOne</a>
+      <a href="/">saladin.su</a>
+    </nav>
+  </article>
+  <!-- Cloudflare Web Analytics -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3172d3151b5647eda6e971e2b390e66c"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+</body>
+</html>

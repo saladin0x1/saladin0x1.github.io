@@ -196,6 +196,12 @@ const ARTICLES = [
     meta: 'SQLi → RCE · CASE FILE',
     url: '/articles/flat-pack-security/',
   },
+  {
+    index: '03',
+    name: 'Origin of Evil',
+    meta: 'DOM XSS · postMessage',
+    url: '/articles/origin-of-evil/',
+  },
 ];
 
 const SelectedWork = memo(function SelectedWork() {
