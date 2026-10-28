@@ -126,6 +126,12 @@
     .aside { margin: 30px 0 0; padding: 22px 24px; border: 1px dashed rgba(255,255,255,.15); color: #969696; font-size: 13px; }
     .aside strong { color: #ccc; font-weight: 400; }
 
+    .qr-proof { max-width: 520px; margin: 34px auto 0; padding: 14px; border: 1px solid rgba(255,255,255,.12); background: #fff; }
+    .qr-proof a { display: block; }
+    .qr-proof img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+    .qr-proof figcaption { margin: 14px -14px -14px; padding: 13px 14px; background: #050505; color: #707070; font-size: 11px; line-height: 1.65; }
+    .qr-proof figcaption code { color: #aaa; }
+
     table { width: 100%; margin: 26px 0 0; border-collapse: collapse; font-size: 12.5px; }
     th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
     td { padding: 11px 12px 11px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
@@ -143,6 +149,8 @@
       body { font-size: 14px; }
       .status-grid { grid-template-columns: 1fr; }
       .event { grid-template-columns: 72px 1fr; gap: 14px; }
+      .qr-proof { margin-left: -12px; margin-right: -12px; padding: 0; }
+      .qr-proof figcaption { margin: 0; }
       table { font-size: 12px; }
       td:first-child { width: auto; }
     }
@@ -179,7 +187,7 @@
         <li>The report was accepted as High within three hours</li>
         <li>Five months of acknowledgements left a symptom-level image filter and rate limits attached to objects an unauthenticated caller could mint</li>
         <li>The image filter blocked what its decoder understood and allowed a phone-readable code its decoder did not</li>
-        <li>Names, domains, keys, routes, identifiers, and exact bypass parameters are withheld</li>
+        <li>Names, domains, keys, routes, identifiers, and live-target operational details are withheld</li>
       </ul>
     </div>
 
@@ -237,7 +245,14 @@
         <tr><td>May this caller publish and notify?</td><td>Authorization</td><td>The question the image filter never asks</td></tr>
       </tbody>
     </table>
-    <p>The exact degradation parameters are omitted while remediation is incomplete. The important lesson does not require a recipe: when an attacker controls the input, “my decoder failed” is not evidence that the input is safe.</p>
+    <p>The specimen below uses the same deterministic corruption routine as the controlled retest, with a new benign destination. It starts with an error-correction level H code and removes just over 20% of its original black pixels while preserving enough structure for a robust mobile decoder. Its only payload is <code>https://saladin.su/</code>.</p>
+    <figure class="qr-proof">
+      <a href="bypass-qr.png" aria-label="Open the QR specimen at full size">
+        <img src="bypass-qr.png" width="740" height="740" loading="lazy" decoding="async" alt="Deliberately degraded QR code that resolves to https://saladin.su/">
+      </a>
+      <figcaption>Live specimen. Apple Vision resolves <code>https://saladin.su/</code> at full and mobile display sizes. OpenCV returns no payload. Scan it yourself, or tap it for the original.</figcaption>
+    </figure>
+    <p>The image makes the failure concrete: “my decoder failed” is not evidence that the input is safe. Different decoders have different recovery limits, and the attacker gets to choose the input between them.</p>
     <p>Content inspection can be useful defense in depth. It cannot repair an authorization model that lets the anonymous public publish trusted content and distribute it through official channels.</p>
 
     <h2><span class="no">05</span>The decorative rate limit</h2>
@@ -274,7 +289,7 @@
     <p>Security programs love nouns: ticket, team, SLA, scanner, rate limiter, retest. Vulnerabilities live in verbs: read, create, publish, send. If an anonymous caller can still perform the dangerous verbs, the nouns are office furniture.</p>
 
     <p class="closing"><em>Working on it is a status. It is not a security control.</em></p>
-    <p class="disclosure">Disclosure note: the organization, product, handling parties, usernames, API keys, repositories, domains, routes, object identifiers, recipients, and exact bypass parameters have been removed. All impact validation used addresses, devices, and harmless content controlled by the researcher. Operational details remain withheld while remediation is incomplete.</p>
+    <p class="disclosure">Disclosure note: the organization, product, handling parties, usernames, API keys, repositories, domains, routes, object identifiers, and recipients have been removed. All impact validation used addresses, devices, and harmless content controlled by the researcher. Live-target operational details remain withheld while remediation is incomplete.</p>
 
     <nav class="links" aria-label="References">
       <a href="/articles/origin-of-evil/">Previous case file: Origin of Evil</a>
