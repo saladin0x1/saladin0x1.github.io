@@ -202,6 +202,12 @@ const ARTICLES = [
     meta: 'DOM XSS · postMessage',
     url: '/articles/origin-of-evil/',
   },
+  {
+    index: '04',
+    name: 'Working on It',
+    meta: 'API KEY · SCOPE',
+    url: '/articles/working-on-it/',
+  },
 ];
 
 const SelectedWork = memo(function SelectedWork() {

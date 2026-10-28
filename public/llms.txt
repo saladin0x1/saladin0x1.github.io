@@ -15,6 +15,7 @@ Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests ce
 - [CleanseMeMaybe — Craft CMS RCE via condition.config](https://saladin.su/articles/cleanse-me-maybe/): How a JSON string walked past Craft CMS's config sanitizer. CVE-2026-78416, CVSS 8.8, fixed in Craft CMS 5.10.6 / 4.18.2.
 - [Flat-Pack Security — redacted SQL injection to RCE case file](https://saladin.su/articles/flat-pack-security/): How an unauthenticated forgot-password SQL injection became OS command execution across three markets, followed by a 71-day bounty wait. Vendor identifiers and sensitive evidence are redacted.
 - [Origin of Evil — postMessage origin-check bypass to DOM XSS](https://saladin.su/articles/origin-of-evil/): One missing negation in a ~indexOf origin check opened innerHTML and cookie-injection sinks on storefronts. Wildcard-DNS origins, SVG-namespace payloads, and an attack fully compliant with RFCs 1034, 1035, 6454, 8555, and the CA/Browser Forum requirements. Redacted case file.
+- [Working on It — public API key and remediation theater](https://saladin.su/articles/working-on-it/): A public-by-design client key retained read, write, content-publishing, and notification capabilities. Five months later, symptom-level image filtering and object-scoped rate limits still missed the authorization failure. Names and operational details are redacted.
 
 ## Verified Profiles
 

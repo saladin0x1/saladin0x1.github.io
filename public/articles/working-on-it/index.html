@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>Working on It: A Redacted Case File | saladin.su</title>
+  <meta name="description" content="A public-by-design API key with private-by-consequence powers, five months of working on it, a symptom-level image filter, and the formal retest button nobody pressed.">
+  <meta name="author" content="Salah-Eddine Elouali">
+  <link rel="canonical" href="https://saladin.su/articles/working-on-it/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://saladin.su/articles/working-on-it/">
+  <meta property="og:title" content="Working on It: A Redacted Case File">
+  <meta property="og:description" content="The report acquired handlers faster than the public credential lost powers. A case study in remediation theater.">
+  <meta property="og:image" content="https://saladin.su/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Working on It: A Redacted Case File">
+  <meta name="twitter:description" content="The report acquired handlers faster than the public credential lost powers. A case study in remediation theater.">
+  <link rel="preload" href="/fonts/space-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  (function(){
+    var boot=function(){ posthog.init('phc_wsYCAzHQBnBMUgHhE3LRDva4bZd11F5nFrwJDp6o51L',{api_host:'https://eu.i.posthog.com'}); };
+    if('requestIdleCallback' in window){ requestIdleCallback(boot,{timeout:3000}); } else { window.addEventListener('load',boot); }
+  })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Working on It: A Redacted Case File",
+    "description": "A public-by-design API key with private-by-consequence powers, five months of working on it, a symptom-level image filter, and the formal retest button nobody pressed.",
+    "datePublished": "2026-10-28",
+    "author": {
+      "@type": "Person",
+      "name": "Salah-Eddine Elouali",
+      "url": "https://saladin.su/",
+      "sameAs": ["https://github.com/saladin0x1", "https://hackerone.com/saladin0x1"]
+    },
+    "mainEntityOfPage": "https://saladin.su/articles/working-on-it/",
+    "publisher": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" }
+  }
+  </script>
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #000; }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: #c9c9c9;
+      font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: url('/noise.png') repeat;
+      opacity: 0.035;
+    }
+
+    a { color: #9a9a9a; text-decoration-color: #3a3a3a; text-underline-offset: 5px; transition: color .2s ease, text-decoration-color .2s ease; }
+    a:hover, a:focus-visible { color: #fff; text-decoration-color: #9a9a9a; outline: none; }
+
+    .back { position: fixed; top: 26px; left: clamp(20px, 5vw, 56px); z-index: 10; font-size: 12px; letter-spacing: .1em; text-decoration: none; color: #666; }
+    .back:hover { color: #d8d8d8; }
+
+    article { max-width: 76ch; margin: 0 auto; padding: clamp(90px, 14vh, 150px) clamp(22px, 6vw, 40px) 90px; }
+
+    .eyebrow { margin: 0 0 26px; color: #666; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+
+    h1 { margin: 0; color: #e6e6e6; font-size: clamp(40px, 7vw, 68px); font-weight: 400; letter-spacing: -.055em; line-height: .98; }
+
+    .dek { margin: 24px 0 0; max-width: 59ch; color: #8f8f8f; font-size: 15px; line-height: 1.7; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 34px 0 0; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.09); border-bottom: 1px solid rgba(255,255,255,.09); color: #6f6f6f; font-size: 11.5px; letter-spacing: .06em; }
+
+    .status-card { position: relative; margin: 44px 0 0; padding: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,.13); background: #050505; }
+    .status-card::after { content: 'WORKING ON IT'; position: absolute; right: -31px; top: 27px; padding: 5px 36px; border: 1px solid #494949; color: #777; font-size: 9px; letter-spacing: .2em; transform: rotate(36deg); }
+    .status-label { color: #5f5f5f; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; }
+    .status-value { margin-top: 4px; color: #d4d4d4; font-size: clamp(21px, 4vw, 31px); line-height: 1.25; }
+    .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 22px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.09); }
+    .status-grid div { padding: 14px; background: #050505; }
+    .status-grid span { display: block; color: #5f5f5f; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+    .status-grid strong { display: block; margin-top: 5px; color: #aaa; font-size: 12px; font-weight: 400; }
+
+    .tldr { margin: 26px 0 0; padding: 22px 24px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.015); }
+    .tldr h2 { margin: 0 0 14px; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .tldr ul { margin: 0; padding: 0; list-style: none; }
+    .tldr li { position: relative; padding: 5px 0 5px 20px; color: #a8a8a8; font-size: 13.5px; line-height: 1.65; }
+    .tldr li::before { content: '·'; position: absolute; left: 4px; color: #555; }
+
+    h2 { margin: 72px 0 0; color: #dcdcdc; font-size: 21px; font-weight: 400; letter-spacing: -.02em; }
+    h2 .no { color: #4a4a4a; margin-right: 14px; }
+    h3 { margin: 46px 0 0; color: #c4c4c4; font-size: 16px; font-weight: 400; }
+    p { margin: 20px 0 0; }
+    code { font-family: inherit; color: #d0d0d0; font-size: .92em; }
+
+    blockquote { margin: 30px 0 0; padding: 2px 0 2px 20px; border-left: 2px solid rgba(255,255,255,.2); color: #8d8d8d; }
+
+    .timeline { margin: 32px 0 0; border-top: 1px solid rgba(255,255,255,.1); }
+    .event { display: grid; grid-template-columns: 92px 1fr; gap: 22px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .event time { color: #666; font-size: 11px; letter-spacing: .04em; }
+    .event p { margin: 0; color: #a2a2a2; font-size: 13px; line-height: 1.65; }
+    .event .chorus { color: #d0d0d0; }
+
+    .redaction { display: inline-block; width: 7.8em; height: .82em; vertical-align: -.04em; background: #373737; color: transparent; user-select: none; }
+
+    .aside { margin: 30px 0 0; padding: 22px 24px; border: 1px dashed rgba(255,255,255,.15); color: #969696; font-size: 13px; }
+    .aside strong { color: #ccc; font-weight: 400; }
+
+    table { width: 100%; margin: 26px 0 0; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    td { padding: 11px 12px 11px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
+    td:first-child { width: 33%; color: #7d7d7d; }
+
+    .formula { margin: 28px 0 0; padding: 20px; border: 1px solid rgba(255,255,255,.08); border-left: 2px solid rgba(255,255,255,.22); background: #070707; color: #aaa; font-size: 12.5px; line-height: 2; white-space: pre-wrap; }
+
+    .closing { margin: 72px 0 0; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); color: #8d8d8d; }
+    .closing em { color: #d5d5d5; font-style: normal; }
+
+    .disclosure { margin-top: 34px; color: #606060; font-size: 11px; line-height: 1.7; }
+    .links { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 56px 0 0; padding: 22px 0 0; border-top: 1px solid rgba(255,255,255,.09); font-size: 12px; letter-spacing: .04em; }
+
+    @media (max-width: 600px) {
+      body { font-size: 14px; }
+      .status-grid { grid-template-columns: 1fr; }
+      .event { grid-template-columns: 72px 1fr; gap: 14px; }
+      table { font-size: 12px; }
+      td:first-child { width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← saladin.su</a>
+  <article>
+    <p class="eyebrow">Security Research · Redacted Case File · Remediation</p>
+    <h1>Working on It</h1>
+    <p class="dek">A public API key could write configurations, publish images under a trusted brand, and send official messages to arbitrary recipients. The report was triaged as High before lunch. Five months later, the most durable control was still the sentence “we are working on it.”</p>
+    <div class="meta">
+      <span>Salah-Eddine Elouali</span>
+      <span>October 28, 2026</span>
+      <span>~8 min read</span>
+    </div>
+
+    <section class="status-card" aria-label="Case status summary">
+      <div class="status-label">Case status</div>
+      <div class="status-value">Remediation has entered the chat</div>
+      <div class="status-grid">
+        <div><span>Severity</span><strong>High</strong></div>
+        <div><span>Elapsed</span><strong>5 months</strong></div>
+        <div><span>Root cause</span><strong>Still public</strong></div>
+      </div>
+    </section>
+
+    <div class="tldr">
+      <h2>The short version</h2>
+      <ul>
+        <li>Two identical API keys appeared in unrelated public code repositories</li>
+        <li>The key was intentionally public; the dangerous part was its authority to read protected data, create objects, publish trusted content, and trigger branded email</li>
+        <li>Every impact test used my own inbox, phone, and harmless content</li>
+        <li>The report was accepted as High within three hours</li>
+        <li>Five months of acknowledgements left a symptom-level image filter and rate limits attached to objects an unauthenticated caller could mint</li>
+        <li>The image filter blocked what its decoder understood and allowed a phone-readable code its decoder did not</li>
+        <li>Names, domains, keys, routes, identifiers, and exact bypass parameters are withheld</li>
+      </ul>
+    </div>
+
+    <h2><span class="no">01</span>The public secret</h2>
+    <p>The story started with two API keys in two unrelated public repositories. They were live, identical in privilege, and sufficient to reach an API belonging to a household-name consumer brand.</p>
+    <p>Without a key, a protected request returned <code>403</code>. With either key, the API returned planner data and product assets. It also accepted writes: new configurations, image uploads, and notification jobs. One chain ended with an email delivered to any supplied recipient from the brand’s official no-reply identity.</p>
+    <p>The report initially described leaked credentials. Engineering supplied an important correction:</p>
+    <blockquote>“We designed this API key to be public. The problem may be the scope of the API key.”</blockquote>
+    <p>Correct. That distinction makes the design worse, not safer.</p>
+    <p>If a credential is deliberately shipped to every browser, it is not authentication. It is a label. Every person on the internet possesses it by design. The only safe privileges behind that label are privileges the entire internet may exercise.</p>
+    <div class="formula">public key + private consequences = public consequences</div>
+    <p>The secret was never the string. The secret was that possession of a public string meant permission to perform private actions.</p>
+
+    <h2><span class="no">02</span>High before lunch</h2>
+    <p>The report was submitted shortly after 09:30. Preliminary review passed eleven minutes later. By noon it was triaged, assigned to the responsible team, and scored High.</p>
+    <p>That part worked beautifully. The platform recognized the evidence, the impact chain was reproducible, and the severity reflected a network-reachable action requiring no user interaction or account.</p>
+    <p>Then time changed viscosity.</p>
+
+    <div class="timeline" aria-label="Redacted remediation timeline">
+      <div class="event"><time>May 22</time><p>High severity accepted. Remediation begins.</p></div>
+      <div class="event"><time>May 27</time><p>The key is confirmed public by design. Excessive scope is identified as the real problem.</p></div>
+      <div class="event"><time>June 15</time><p>Engineering says the issue requires “a consequence of actions.”</p></div>
+      <div class="event"><time>July 01</time><p class="chorus">“We are working on the fix.”</p></div>
+      <div class="event"><time>July 29</time><p class="chorus">“Our teams are still working on this issue.”</p></div>
+      <div class="event"><time>Aug. 18</time><p>The researcher is asked to validate a fix in the comment thread. No formal retest is opened.</p></div>
+      <div class="event"><time>Aug. 20</time><p>API scoping is described as a complex change across several applications.</p></div>
+      <div class="event"><time>Oct. 02</time><p class="chorus">“Our teams are still working on this issue.”</p></div>
+      <div class="event"><time>Oct. 26</time><p>The researcher is again asked to validate in comments. Again, no formal retest is opened.</p></div>
+      <div class="event"><time>Oct. 26</time><p>The new image filter is bypassed during controlled validation.</p></div>
+      <div class="event"><time>Oct. 27</time><p>Rate limits are shown not to constrain realistic pacing or object rotation.</p></div>
+    </div>
+
+    <p>The report acquired handlers faster than the credential lost powers.</p>
+
+    <h2><span class="no">03</span>The button</h2>
+    <p>Twice, the handling team asked me to validate the fix through ordinary comments. The platform has a formal retest workflow. The organization opens it, defines the request, and the researcher returns structured evidence through a dedicated form.</p>
+    <p>I asked them to use it. It was not a philosophical demand. It was two clicks and a record of what, exactly, was supposed to be fixed.</p>
+    <p>A formal retest creates a boundary between “please poke production again” and an authorized validation exercise. It gives the researcher a scope, gives the organization a result, and gives both sides an audit trail. Asking casually in a comment transfers all ambiguity to the person doing the testing.</p>
+    <div class="aside"><strong>Process finding:</strong> if your security workflow contains a button named “Request retest,” asking the researcher to invent a parallel workflow in the comments is not agility. It is shadow IT with thank-you messages.</div>
+
+    <h2><span class="no">04</span>The fix photographs the symptom</h2>
+    <p>The original impact demonstration used the public key to upload a harmless image to the brand’s trusted content domain. The same public capability could prepare and send an official email containing that content. SPF, DKIM, and DMARC all passed because the message really came from the brand’s infrastructure.</p>
+    <p>The image was a benign phishing simulation. It showed why trusted hosting plus trusted delivery matters even when the upload only accepts ordinary image formats. A recipient does not inspect the API authorization model. A recipient sees a familiar sender, a familiar domain, and a picture telling them what to do next.</p>
+    <p>Five months later, images containing machine-readable codes began failing during upload. The original proof image, which had remained public for months, disappeared in the same window. A content filter had arrived.</p>
+    <p>It was also aimed at the screenshot, not the authority that created the screenshot.</p>
+
+    <h3>Detection is not decoding</h3>
+    <p>I tested the filter with a small differential matrix. Normal codes were rejected. Rotated, mirrored, inverted, and low-contrast codes were also rejected when the server could decode them. Fake code-like geometry without a valid payload passed.</p>
+    <p>Then a deliberately degraded code passed. The server could no longer decode it, but a phone camera recovered it immediately. Embedded inside a normal banner, it was accepted, published under the trusted content domain, and remained scannable end to end.</p>
+    <table aria-label="Difference between decoding and detection">
+      <thead><tr><th>Question</th><th>Control</th><th>Failure</th></tr></thead>
+      <tbody>
+        <tr><td>Can I read this code?</td><td>Decoder</td><td>Failure to read becomes permission to upload</td></tr>
+        <tr><td>Does this image contain code-like structure?</td><td>Detector</td><td>Can flag suspicious structure even when payload recovery fails</td></tr>
+        <tr><td>May this caller publish and notify?</td><td>Authorization</td><td>The question the image filter never asks</td></tr>
+      </tbody>
+    </table>
+    <p>The exact degradation parameters are omitted while remediation is incomplete. The important lesson does not require a recipe: when an attacker controls the input, “my decoder failed” is not evidence that the input is safe.</p>
+    <p>Content inspection can be useful defense in depth. It cannot repair an authorization model that lets the anonymous public publish trusted content and distribute it through official channels.</p>
+
+    <h2><span class="no">05</span>The decorative rate limit</h2>
+    <p>The second visible control was throttling. In a tight loop, the service eventually returned <code>429</code>. At natural request pacing, the bucket refilled quickly enough that the complete prepare-and-send cycle continued without meaningful resistance.</p>
+    <p>Another notification channel limited each configuration. Configurations, however, were unauthenticated to create. A fresh object produced a fresh quota bucket.</p>
+    <p>This is the rate-limit equivalent of issuing one parking ticket per car while handing out free cars beside the meter.</p>
+    <p>A useful abuse control must attach cost to something the attacker cannot mint freely. Depending on the system, that can include an authenticated principal, verified recipient, tenant budget, source reputation, global queue budget, or combinations of all five. An object identifier supplied by an unauthenticated object factory is not an identity.</p>
+
+    <h2><span class="no">06</span>Four-ish people, zero ownership</h2>
+    <p>By the five-month mark, the report had accumulated several handlers, external participants, reassignment events, status chases, fix-validation requests, and carefully polished acknowledgements.</p>
+    <p>It had passed through preliminary review, triage, engineering, remediation, validation, and multiple rounds of “thank you for your patience.” It had not passed through least privilege.</p>
+    <p>This is how a report can be assigned to a team and still belong to nobody. Every participant can be responsive. Every message can be polite. Every dashboard can remain green. The vulnerability survives because communication is being measured where closure should be.</p>
+    <blockquote>“We are working on it” is a perfectly respectable sentence for a week. By month five, it is a monitoring metric.</blockquote>
+    <p>The comedy is not that a fix took time. Splitting a public client credential from several applications can be real architecture work. The comedy is that the architecture work remained pending while two cheaper controls were shipped around the proof of concept, then handed back to the researcher as if regression testing were a community activity.</p>
+
+    <h2><span class="no">07</span>What a root fix looks like</h2>
+    <table aria-label="Root remediation plan">
+      <thead><tr><th>Layer</th><th>Required property</th></tr></thead>
+      <tbody>
+        <tr><td>Public client key</td><td>Read-only access to resources that are genuinely public</td></tr>
+        <tr><td>Configuration writes</td><td>Authenticated session, ownership checks, and per-principal quotas</td></tr>
+        <tr><td>Content publication</td><td>Authorization independent of file type or scanner verdict</td></tr>
+        <tr><td>Prepared messages</td><td>Bound to an authenticated owner, recipient, purpose, and short expiry</td></tr>
+        <tr><td>Notification sending</td><td>Rate limits at principal, recipient, tenant, source, and global levels</td></tr>
+        <tr><td>Content scanning</td><td>Detection as defense in depth, with suspicious decode failures handled safely</td></tr>
+        <tr><td>Validation</td><td>Formal retest with explicit acceptance criteria and one accountable owner</td></tr>
+      </tbody>
+    </table>
+    <p>Rotate the exposed keys, certainly, but rotation alone changes the public string without changing the public authority. If the new key returns to the same frontend with the same scopes, the remediation is a costume change.</p>
+
+    <h2><span class="no">08</span>The finding behind the finding</h2>
+    <p>The weakness label on the report said hard-coded credentials. Technically true, conceptually incomplete. The key was hard-coded because it was intended to be public. The actual bug was capability collapse: one client token represented browsing, writing, publishing, and sending.</p>
+    <p>The first remediation treated the malicious picture. The second treated request speed. Neither treated the caller’s authority.</p>
+    <p>Security programs love nouns: ticket, team, SLA, scanner, rate limiter, retest. Vulnerabilities live in verbs: read, create, publish, send. If an anonymous caller can still perform the dangerous verbs, the nouns are office furniture.</p>
+
+    <p class="closing"><em>Working on it is a status. It is not a security control.</em></p>
+    <p class="disclosure">Disclosure note: the organization, product, handling parties, usernames, API keys, repositories, domains, routes, object identifiers, recipients, and exact bypass parameters have been removed. All impact validation used addresses, devices, and harmless content controlled by the researcher. Operational details remain withheld while remediation is incomplete.</p>
+
+    <nav class="links" aria-label="References">
+      <a href="/articles/origin-of-evil/">Previous case file: Origin of Evil</a>
+      <a href="/articles/flat-pack-security/">Flat-Pack Security</a>
+      <a href="https://hackerone.com/saladin0x1">HackerOne</a>
+      <a href="/">saladin.su</a>
+    </nav>
+  </article>
+  <!-- Cloudflare Web Analytics -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3172d3151b5647eda6e971e2b390e66c"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+</body>
+</html>
