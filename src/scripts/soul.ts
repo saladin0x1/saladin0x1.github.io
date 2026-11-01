@@ -1,5 +1,6 @@
 // The Driver - local status engine. Replaces the retired Gemini proxy.
-// Resolution order: memory bank -> compiled corpus -> real lyrics (LRCLIB) -> ghost markov.
+// Resolution order: memory bank -> compiled corpus -> track context -> AI -> lyric/ghost fallback.
+// Track context always prefers real LRCLIB lyrics; when none exist, it supplies Last.fm genre tags.
 // Unknown tracks are logged once per session as 'uncataloged_track' so the corpus can grow.
 
 import { captureEvent } from './analytics';
@@ -108,7 +109,18 @@ function ghostLine(seed: string): string {
 let aiFailures = 0;
 const AI_FAILURE_LIMIT = 2;
 
-async function fetchAiReaction(seed: string, isActive: boolean): Promise<string | null> {
+interface TrackContext {
+  lyrics: string;
+  lyricLine: string | null;
+  genres: string[];
+  instrumental: boolean;
+}
+
+async function fetchAiReaction(
+  seed: string,
+  isActive: boolean,
+  context: TrackContext
+): Promise<string | null> {
   if (aiFailures >= AI_FAILURE_LIMIT) return null;
   try {
     const controller = new AbortController();
@@ -116,7 +128,13 @@ async function fetchAiReaction(seed: string, isActive: boolean): Promise<string 
     const response = await fetch('/api/reaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seed, isActive }),
+      body: JSON.stringify({
+        seed,
+        isActive,
+        lyrics: context.lyrics || undefined,
+        genres: context.lyrics ? [] : context.genres,
+        instrumental: context.instrumental,
+      }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -162,16 +180,50 @@ function pickLyricLine(plainLyrics: string, seed: string): string | null {
   return middle[hashSeed(seed) % middle.length] ?? null;
 }
 
-async function fetchLyricLine(artist: string, track: string, seed: string): Promise<string | null> {
+function lyricsExcerpt(plainLyrics: string): string {
+  const cleaned = plainLyrics
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !/^[\[(].*[\])]$/.test(line))
+    .join('\n');
+
+  const limit = 2800;
+  if (cleaned.length <= limit) return cleaned;
+
+  // Keep a representative middle window, where verses and choruses are more
+  // useful than credits, spoken intros, or long outros.
+  const start = Math.floor((cleaned.length - limit) / 2);
+  const leftBoundary = cleaned.indexOf('\n', start);
+  const rightBoundary = cleaned.lastIndexOf('\n', start + limit);
+  return cleaned.slice(leftBoundary >= 0 ? leftBoundary + 1 : start, rightBoundary > start ? rightBoundary : start + limit);
+}
+
+async function fetchTrackContext(artist: string, track: string, seed: string): Promise<TrackContext> {
+  const empty: TrackContext = { lyrics: '', lyricLine: null, genres: [], instrumental: false };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4000);
+
   try {
     const params = new URLSearchParams({ artist, track });
-    const response = await fetch(`/api/lyrics?${params}`);
-    if (!response.ok) return null;
-    const data = (await response.json()) as { plainLyrics: string | null; instrumental: boolean };
-    if (data.instrumental || !data.plainLyrics) return null;
-    return pickLyricLine(data.plainLyrics, seed);
+    const response = await fetch(`/api/lyrics?${params}`, { signal: controller.signal });
+    if (!response.ok) return empty;
+
+    const data = (await response.json()) as {
+      plainLyrics: string | null;
+      instrumental: boolean;
+      genres?: string[];
+    };
+    const plainLyrics = data.instrumental ? null : data.plainLyrics;
+    return {
+      lyrics: plainLyrics ? lyricsExcerpt(plainLyrics) : '',
+      lyricLine: plainLyrics ? pickLyricLine(plainLyrics, seed) : null,
+      genres: Array.isArray(data.genres) ? data.genres.slice(0, 5) : [],
+      instrumental: data.instrumental === true,
+    };
   } catch {
-    return null;
+    return empty;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -201,16 +253,16 @@ export async function resolveSignal({ isActive, artist, track }: Signal): Promis
     return curated;
   }
 
-  const ai = await fetchAiReaction(seed, isActive);
+  const context = await fetchTrackContext(artist, track, seed);
+  const ai = await fetchAiReaction(seed, isActive, context);
   if (ai) {
     logUncataloged(seed, 'ai');
     LINE_CACHE.set(seed, ai);
     return ai;
   }
 
-  const lyric = await fetchLyricLine(artist, track, seed);
-  const line = lyric ?? ghostLine(seed);
-  logUncataloged(seed, lyric ? 'lyrics' : 'ghost');
+  const line = context.lyricLine ?? ghostLine(seed);
+  logUncataloged(seed, context.lyricLine ? 'lyrics' : 'ghost');
   LINE_CACHE.set(seed, line);
   return line;
 }
