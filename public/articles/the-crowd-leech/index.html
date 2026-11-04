@@ -130,6 +130,9 @@
     .evidence { margin: 34px 0 0; }
     .evidence img { display: block; width: 100%; height: auto; border: 1px solid rgba(255,255,255,.1); background: #0d1117; }
     .evidence figcaption { margin-top: 10px; color: #666; font-size: 11.5px; line-height: 1.65; }
+    .evidence--phone { max-width: 420px; }
+
+    .cc { margin: 18px 0 0; color: #666; font-size: 12px; letter-spacing: .04em; }
 
     .closing { margin: 72px 0 0; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); color: #8d8d8d; }
     .closing em { color: #d5d5d5; font-style: normal; }
@@ -154,7 +157,7 @@
     <div class="meta">
       <span>Salah-Eddine Elouali</span>
       <span>November 4, 2026</span>
-      <span>~8 min read</span>
+      <span>~9 min read</span>
     </div>
 
     <section class="status-card" aria-label="Case status summary">
@@ -177,6 +180,7 @@
         <li>Before each upload, the server answers 1/0 per URL on whether it wants that page. Harvesting is demand-driven, not incidental</li>
         <li>It taps LinkedIn's internal APIs and pulls <code>phoneNumbers</code> straight out of Sales Navigator and Recruiter responses</li>
         <li>Every claim below is anchored to a file and byte offset in the public evidence repo</li>
+        <li>The verdict reply was removed from the thread within the hour; the exchange survives below as screenshots</li>
       </ul>
     </div>
 
@@ -184,6 +188,26 @@
     <p>The dispute started the way most of them do: someone with an audience told that audience a tool was safe. The claim was precise, which made it testable. The extension only reads LinkedIn's own contact info feature, the same one you see when you tap "Contact info" on a profile. No leet haxor involved.</p>
     <p>That claim is half right, and the half that is right is the least interesting half. Yes, the data source is LinkedIn's contact info feature, plus everything else the page contains. The mechanism is the finding: aggregation at fleet scale, then resale. The distinction that settles the argument is not source versus source. It is what one browser does versus what a hundred thousand of them do on instruction.</p>
     <p>Rather than keep trading adjectives, I pulled the store-signed CRX3, unpacked the webpack bundle, and read it. Static analysis, no deobfuscation beyond reading minified ES5, about thirty minutes with an LLM doing the heavy lifting on the ugly parts. Every finding below cites the file and byte offset where it lives.</p>
+
+    <p>The exchange that started it, preserved as it happened:</p>
+    <figure class="evidence evidence--phone">
+      <img src="thread-01-exchange.webp" width="720" height="1028" loading="lazy" decoding="async" alt="The public thread: the recommendation comment, the author's pushback, and the start of the verdict reply">
+      <figcaption>Exhibit A: the claim, the "doesn't work all the time" pushback, and the thirty-minute bet that followed.</figcaption>
+    </figure>
+    <figure class="evidence evidence--phone">
+      <img src="thread-02-verdict.webp" width="720" height="1028" loading="lazy" decoding="async" alt="The verdict comment as posted: distributed scraping node, whole-DOM shipping, server-gated upload">
+      <figcaption>Exhibit B: the verdict as posted, first half.</figcaption>
+    </figure>
+    <figure class="evidence evidence--phone">
+      <img src="thread-03-verdict-end.webp" width="720" height="1028" loading="lazy" decoding="async" alt="The verdict comment ending with LinkedIn User Agreement section 8.2 and the evidence repository link, plus one redacted reply">
+      <figcaption>Exhibit C: the verdict ends on the §8.2 risk allocation and the repository link. A third-party reply is redacted.</figcaption>
+    </figure>
+
+    <p>The comment stood for about an hour. Then it was removed from the thread. A friend shared the post back to me in DMs, pointing out that the comment now survived only inside the share itself. Deleting the reply removes the argument from that page. It does not remove the offsets.</p>
+    <figure class="evidence evidence--phone">
+      <img src="thread-04-dm-removal.webp" width="720" height="1143" loading="lazy" decoding="async" alt="A direct-message share of the post where a friend notes the comment was removed and is visible only through the shared copy, closing with a message of support">
+      <figcaption>Exhibit D: the removal, seen from a friend's DM share. My friend's identity is removed; loosely translated, the note says the comment was deleted and is visible now only through the share.</figcaption>
+    </figure>
 
     <h2><span class="no">02</span>What ships when you view a profile</h2>
     <p>Open any LinkedIn profile with the extension installed and two things get queued for upload. Neither is "just the contact info".</p>
@@ -244,7 +268,7 @@ if (n) for (const p of n.phoneNumbers) p.number &amp;&amp; e.phones.push(p.numbe
 
     <figure class="evidence">
       <img src="verdict-snippet.png" width="1040" height="1235" loading="lazy" decoding="async" alt="Verdict snippet: the crowd-leech loop annotated in minified bundle identifiers, from harvest to server gate to credit wallets">
-      <figcaption>Exhibit A: the entire business loop in verbatim bundle identifiers, harvest to gate to wallets. Byte-offset anchored in the evidence repo.</figcaption>
+      <figcaption>Exhibit E: the entire business loop in verbatim bundle identifiers, harvest to gate to wallets. Byte-offset anchored in the evidence repo.</figcaption>
     </figure>
 
     <h2><span class="no">09</span>Reproduce it yourself</h2>
@@ -252,8 +276,14 @@ if (n) for (const p of n.phoneNumbers) p.number &amp;&amp; e.phones.push(p.numbe
     <p><a href="https://github.com/saladin0x1/chrome-extension-analysis">github.com/saladin0x1/chrome-extension-analysis</a></p>
     <p>The CRX fetcher strips the store signature wrapper, the context extractor pulls readable neighborhoods out of the minified bundle, and every snippet in the repo carries its file and offset so you do not have to trust a single word of mine. Run it before the extension updates past v5.18.3, and note what the store still says about it while you do.</p>
 
+    <h2><span class="no">10</span>Deletion is not discourse</h2>
+    <p>An audience was told a tool was harmless. Someone checked. The check came back with byte offsets. The thread had every option available to it: verify the receipts, correct the recommendation, or argue back with better ones. It chose the fourth option, the quiet one, and the correction disappeared while the recommendation stayed.</p>
+    <p>That is the real point of this case file, beyond the grayware. A recommendation pushed to thousands of people is cheap to make and expensive to audit. When someone does the audit for free and hands back offsets anyone can rerun, deletion converts a technical dispute into a character statement. It tells the audience the claim mattered less than the comfort of keeping it.</p>
+    <p>Vague-post, then remove, then move on is a strategy. It is just not a discussion. The extension is still in the store, the fleet is still harvesting, and the followers still deserve the answer that got deleted. So it lives here now.</p>
+
     <p class="closing"><em>Not magic, not malware. A crowd, leeched by consent of one and to the profit of another.</em></p>
-    <p class="disclosure">Disclosure note: analysis was performed on a publicly downloadable store artifact for interoperability and research understanding. No vendor code is republished beyond short annotated excerpts. The recommendation thread and its participants are not named; the argument survives without them. All trademarks belong to their owners.</p>
+    <p class="cc">cc: @sudonour on Instagram. Comments can be deleted; byte offsets cannot.</p>
+    <p class="disclosure">Disclosure note: analysis was performed on a publicly downloadable store artifact for interoperability and research understanding. No vendor code is republished beyond short annotated excerpts. The public thread is preserved as screenshots with interface chrome cropped and third-party participants redacted; one private message is quoted with my friend's identity removed. All trademarks belong to their owners.</p>
 
     <nav class="links" aria-label="References">
       <a href="/articles/working-on-it/">Previous case file: Working on It</a>
