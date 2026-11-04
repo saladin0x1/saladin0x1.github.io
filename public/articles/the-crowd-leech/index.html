@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>The Crowd Leech: A Case File | saladin.su</title>
+  <meta name="description" content="A Chrome extension was recommended to thousands of followers as harmless because it only reads LinkedIn's contact info feature. Thirty minutes of static reverse engineering later: distributed scraping node. The whole loop, with byte-offset receipts.">
+  <meta name="author" content="Salah-Eddine Elouali">
+  <link rel="canonical" href="https://saladin.su/articles/the-crowd-leech/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://saladin.su/articles/the-crowd-leech/">
+  <meta property="og:title" content="The Crowd Leech: A Case File">
+  <meta property="og:description" content="Not magic, not malware. A distributed scraping network wearing a Chrome extension.">
+  <meta property="og:image" content="https://saladin.su/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="The Crowd Leech: A Case File">
+  <meta name="twitter:description" content="Not magic, not malware. A distributed scraping network wearing a Chrome extension.">
+  <link rel="preload" href="/fonts/space-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  (function(){
+    var boot=function(){ posthog.init('phc_wsYCAzHQBnBMUgHhE3LRDva4bZd11F5nFrwJDp6o51L',{api_host:'https://eu.i.posthog.com'}); };
+    if('requestIdleCallback' in window){ requestIdleCallback(boot,{timeout:3000}); } else { window.addEventListener('load',boot); }
+  })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The Crowd Leech: A Case File",
+    "description": "A Chrome extension recommended as harmless turned out to be a distributed scraping node. The whole loop, with byte-offset receipts.",
+    "datePublished": "2026-11-04",
+    "author": {
+      "@type": "Person",
+      "name": "Salah-Eddine Elouali",
+      "url": "https://saladin.su/",
+      "sameAs": ["https://github.com/saladin0x1", "https://hackerone.com/saladin0x1"]
+    },
+    "mainEntityOfPage": "https://saladin.su/articles/the-crowd-leech/",
+    "publisher": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" }
+  }
+  </script>
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #000; }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: #c9c9c9;
+      font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: url('/noise.png') repeat;
+      opacity: 0.035;
+    }
+
+    a { color: #9a9a9a; text-decoration-color: #3a3a3a; text-underline-offset: 5px; transition: color .2s ease, text-decoration-color .2s ease; }
+    a:hover, a:focus-visible { color: #fff; text-decoration-color: #9a9a9a; outline: none; }
+
+    .back { position: fixed; top: 26px; left: clamp(20px, 5vw, 56px); z-index: 10; font-size: 12px; letter-spacing: .1em; text-decoration: none; color: #666; }
+    .back:hover { color: #d8d8d8; }
+
+    article { max-width: 76ch; margin: 0 auto; padding: clamp(90px, 14vh, 150px) clamp(22px, 6vw, 40px) 90px; }
+
+    .eyebrow { margin: 0 0 26px; color: #666; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+
+    h1 { margin: 0; color: #e6e6e6; font-size: clamp(40px, 7vw, 68px); font-weight: 400; letter-spacing: -.055em; line-height: .98; }
+
+    .dek { margin: 24px 0 0; max-width: 59ch; color: #8f8f8f; font-size: 15px; line-height: 1.7; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 34px 0 0; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.09); border-bottom: 1px solid rgba(255,255,255,.09); color: #6f6f6f; font-size: 11.5px; letter-spacing: .06em; }
+
+    .status-card { position: relative; margin: 44px 0 0; padding: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,.13); background: #050505; }
+    .status-card::after { content: 'GRAYWARE'; position: absolute; right: -31px; top: 27px; padding: 5px 36px; border: 1px solid #494949; color: #777; font-size: 9px; letter-spacing: .2em; transform: rotate(36deg); }
+    .status-label { color: #5f5f5f; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; }
+    .status-value { margin-top: 4px; color: #d4d4d4; font-size: clamp(21px, 4vw, 31px); line-height: 1.25; }
+    .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 22px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.09); }
+    .status-grid div { padding: 14px; background: #050505; }
+    .status-grid span { display: block; color: #5f5f5f; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+    .status-grid strong { display: block; margin-top: 5px; color: #aaa; font-size: 12px; font-weight: 400; }
+
+    .tldr { margin: 26px 0 0; padding: 22px 24px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.015); }
+    .tldr h2 { margin: 0 0 14px; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .tldr ul { margin: 0; padding: 0; list-style: none; }
+    .tldr li { position: relative; padding: 5px 0 5px 20px; color: #a8a8a8; font-size: 13.5px; line-height: 1.65; }
+    .tldr li::before { content: '·'; position: absolute; left: 4px; color: #555; }
+
+    h2 { margin: 72px 0 0; color: #dcdcdc; font-size: 21px; font-weight: 400; letter-spacing: -.02em; }
+    h2 .no { color: #4a4a4a; margin-right: 14px; }
+    h3 { margin: 46px 0 0; color: #c4c4c4; font-size: 16px; font-weight: 400; }
+    p { margin: 20px 0 0; }
+    code { font-family: inherit; color: #d0d0d0; font-size: .92em; }
+
+    blockquote { margin: 30px 0 0; padding: 2px 0 2px 20px; border-left: 2px solid rgba(255,255,255,.2); color: #8d8d8d; }
+
+    pre { margin: 26px 0 0; padding: 18px 20px; overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-left: 2px solid rgba(255,255,255,.22); background: #070707; font-size: 12.5px; line-height: 1.65; color: #b5b5b5; }
+
+    .flow { margin: 26px 0 0; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.14); color: #a0a0a0; font-size: 12.5px; line-height: 2; white-space: pre; overflow-x: auto; }
+
+    .aside { margin: 30px 0 0; padding: 22px 24px; border: 1px dashed rgba(255,255,255,.15); color: #969696; font-size: 13px; }
+    .aside strong { color: #ccc; font-weight: 400; }
+
+    table { width: 100%; margin: 26px 0 0; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    td { padding: 11px 12px 11px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
+    td:first-child { width: 33%; color: #7d7d7d; }
+
+    .evidence { margin: 34px 0 0; }
+    .evidence img { display: block; width: 100%; height: auto; border: 1px solid rgba(255,255,255,.1); background: #0d1117; }
+    .evidence figcaption { margin-top: 10px; color: #666; font-size: 11.5px; line-height: 1.65; }
+
+    .closing { margin: 72px 0 0; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); color: #8d8d8d; }
+    .closing em { color: #d5d5d5; font-style: normal; }
+
+    .disclosure { margin-top: 34px; color: #606060; font-size: 11px; line-height: 1.7; }
+    .links { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 56px 0 0; padding: 22px 0 0; border-top: 1px solid rgba(255,255,255,.09); font-size: 12px; letter-spacing: .04em; }
+
+    @media (max-width: 600px) {
+      body { font-size: 14px; }
+      .status-grid { grid-template-columns: 1fr; }
+      table { font-size: 12px; }
+      td:first-child { width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← saladin.su</a>
+  <article>
+    <p class="eyebrow">Security Research · Case File · Grayware</p>
+    <h1>The Crowd Leech</h1>
+    <p class="dek">A Chrome extension was recommended to thousands of followers as harmless because it only reads LinkedIn's contact info feature. Thirty minutes of static reverse engineering later, the mechanism underneath had a name: a distributed scraping network, one installed browser at a time. Not magic. Not malware. A leecher with a business model.</p>
+    <div class="meta">
+      <span>Salah-Eddine Elouali</span>
+      <span>November 4, 2026</span>
+      <span>~8 min read</span>
+    </div>
+
+    <section class="status-card" aria-label="Case status summary">
+      <div class="status-label">Case status</div>
+      <div class="status-value">Distributed scraping node</div>
+      <div class="status-grid">
+        <div><span>Classification</span><strong>Grayware</strong></div>
+        <div><span>Your session cookie</span><strong>Never leaves the machine</strong></div>
+        <div><span>The product</span><strong>You, harvesting</strong></div>
+      </div>
+    </section>
+
+    <div class="tldr">
+      <h2>The short version</h2>
+      <ul>
+        <li>Target: "Email Finder by ContactOut", Chrome Web Store ID <code>jjdemeiffadmmjhkbbpglgnlgeafomjo</code>, v5.18.3, MV3, about 877 KB</li>
+        <li>It does not steal your LinkedIn password or ship your <code>li_at</code> cookie. That defense of it is true, and it is also beside the point</li>
+        <li>Every profile you view ships wholesale: full Voyager JSON plus the entire page DOM, compressed and queued for upload</li>
+        <li>People you never clicked on ship too: "also viewed", suggested people, and recommendation sidebars</li>
+        <li>Before each upload, the server answers 1/0 per URL on whether it wants that page. Harvesting is demand-driven, not incidental</li>
+        <li>It taps LinkedIn's internal APIs and pulls <code>phoneNumbers</code> straight out of Sales Navigator and Recruiter responses</li>
+        <li>Every claim below is anchored to a file and byte offset in the public evidence repo</li>
+      </ul>
+    </div>
+
+    <h2><span class="no">01</span>The recommendation</h2>
+    <p>The dispute started the way most of them do: someone with an audience told that audience a tool was safe. The claim was precise, which made it testable. The extension only reads LinkedIn's own contact info feature, the same one you see when you tap "Contact info" on a profile. No leet haxor involved.</p>
+    <p>That claim is half right, and the half that is right is the least interesting half. Yes, the data source is LinkedIn's contact info feature, plus everything else the page contains. The mechanism is the finding: aggregation at fleet scale, then resale. The distinction that settles the argument is not source versus source. It is what one browser does versus what a hundred thousand of them do on instruction.</p>
+    <p>Rather than keep trading adjectives, I pulled the store-signed CRX3, unpacked the webpack bundle, and read it. Static analysis, no deobfuscation beyond reading minified ES5, about thirty minutes with an LLM doing the heavy lifting on the ugly parts. Every finding below cites the file and byte offset where it lives.</p>
+
+    <h2><span class="no">02</span>What ships when you view a profile</h2>
+    <p>Open any LinkedIn profile with the extension installed and two things get queued for upload. Neither is "just the contact info".</p>
+    <p>First, the structured data. LinkedIn embeds its server-side-rendered Voyager payloads in <code>&lt;code id="bpr-guid-*"&gt;</code> blocks. The extension parses them out, filters to the interesting entity types (Profile, Position, Education, Company, Skill, School), appends your connection and follower counts, and labels the result <code>json_reg_pro_full</code> (content_script.js @607580).</p>
+    <p>Second, the page itself. Not the contact info popup. The entire DOM:</p>
+    <pre><code>cachePageHtml = () =&gt; cacheProfile(url, cleanDomAndZip(
+  document.querySelector("html")), "pv_rc")</code></pre>
+    <p>The whole document is serialized, stripped of scripts, LZ-compressed, base64-encoded, and queued under type <code>pv_rc</code> (content_script.js @624075). Anything rendered for your eyes on that page, including any contact block you were entitled to see, is in the shipment.</p>
+
+    <h2><span class="no">03</span>The bystanders</h2>
+    <p>Here is the part the "it only reads what you see" defense cannot survive. The same function collects the sidebars: people also viewed, people you may know, and profiles appearing in recommendations. You never clicked them. Their mini-profiles ship anyway, typed <code>json_reg_pro_mini</code> (content_script.js @607580).</p>
+    <pre><code>const minis = [ ...alsoViewedProfiles(doc),
+                ...peopleYouMayKnowProfiles(doc),
+                ...recommendationsProfiles(doc) ];</code></pre>
+    <p>If your profile has ever appeared in anyone's "people also viewed" sidebar, and that person ran this extension, you were harvested. You did not install anything. You were never asked. Your entitlement was someone else's sidebar.</p>
+
+    <h2><span class="no">04</span>The entitled screens</h2>
+    <p>The extension also hooks LinkedIn's internal API responses directly. A watcher list intercepts XHR traffic on <code>voyager/api/identity/dash/profiles</code>, the <code>sales-api</code> family (people search, lead search, profiles, companies), and the <code>talent</code> endpoints (content_script.js @1448099).</p>
+    <p>One handler deserves exact quotation:</p>
+    <pre><code>const n = t.contactInfo;
+if (n) for (const p of n.phoneNumbers) p.number &amp;&amp; e.phones.push(p.number);</code></pre>
+    <p>Phone numbers, lifted straight out of Sales Navigator and Recruiter responses. Those APIs render phone numbers because a seat holder paid for the entitlement. The extension sits in that seat holder's browser and copies the plate.</p>
+
+    <h2><span class="no">05</span>The gate</h2>
+    <p>The most revealing finding is not what gets collected. It is who decides what gets kept. Before any upload, the client asks the server, per URL:</p>
+    <div class="flow">scrape page → cacheProfile
+  → PROFILE_UPLOAD_CHECK → linkedin/profile/secr {t:"pc", p:url}
+  → server answers 1 or 0
+  → 1: UPLOAD_PROFILES → linkedin/profiles/upload
+  → 0: linkedin/profile/pre (page-view telemetry: they still learn who you view)</div>
+    <p>(background.js @94888)</p>
+    <p>The server aims the fleet. If a paying customer's search queue wants a given page, "check" returns 1 for that URL and the next browser that visits it delivers the goods. Harvesting is not a side effect of browsing. It is inventory acquisition on demand.</p>
+    <p>The connection graph gets walked too, on a schedule from the extension's own config: connection checks every 0.5 minutes, 40 profiles per connections page, first-degree URLs reported specifically, and background tabs that open a profile, scrape it, and close (content_script.js @31285). To LinkedIn's rate limiting, that automation is indistinguishable from you browsing. Which is the point.</p>
+
+    <h2><span class="no">06</span>Why phones cost extra</h2>
+    <p>The credit wallets are the confession. The client tracks three separate balances: <code>credit</code> for email reveals, <code>phoneCredit</code> for phone reveals, <code>aiCredit</code> for AI features (user module @58608).</p>
+    <p>Emails are cheap to source. They can be pattern-guessed (<code>first.last@company.com</code>) and verified with a plain SMTP handshake, server-side, at scale, without any browser involved. Phones cannot be guessed. There is no SMTP for dialing. Every phone number in that database was rendered on some entitled screen, at least once, and copied at that moment. Sales Navigator here, Recruiter there, a contact info popup on a first-degree profile, a <code>tel:</code> link, a regex over an arbitrary page if the user enabled "Anywhere" mode on <code>*://*/*</code>.</p>
+    <p>So the phone wallet is priced separately because the sourcing is fundamentally different. Not harder engineering. Rarer accidents.</p>
+    <div class="aside"><strong>The crux most readers miss:</strong> a missing result is not a bug. "It doesn't work all the time" is the crowd-leech model describing itself. A missing phone number is a number no entitled user has ever rendered on screen yet. Coverage gaps are a feature of the harvest, the shadow it casts showing where the crowd has not leeched.</div>
+
+    <h2><span class="no">07</span>What it is not</h2>
+    <p>Discipline runs both ways, so the acquittals, with the same receipts:</p>
+    <table aria-label="Acquittals and verdicts">
+      <thead><tr><th>Accusation</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Steals your LinkedIn session (<code>li_at</code>)</td><td>No. Read locally, a 32-bit hash is kept for logout detection, raw value never transmitted (docs/03)</td></tr>
+        <tr><td>Captures passwords or keystrokes</td><td>No capture path found. Login-page scripts only do session and logout detection</td></tr>
+        <tr><td>Violates Chrome Web Store policy</td><td>Apparently not. The privacy policy discloses the harvesting, and disclosure is what the policy asks</td></tr>
+        <tr><td>Violates the LinkedIn User Agreement</td><td>Yes. Section 8.2, no scraping, and the agreement binds the account holder</td></tr>
+      </tbody>
+    </table>
+    <p>Calling this credential-stealing malware would be easier and lazier. It would also be wrong, and being wrong about the mechanism is how you lose the argument you were winning. The accurate classification is grayware: a distributed scraping node with a compliant privacy policy.</p>
+
+    <h2><span class="no">08</span>The risk allocation</h2>
+    <p>Follow the liability and the design suddenly reads as elegant, in the way parasites are elegant.</p>
+    <p>The user installs the extension. The user's browser does the scraping at human-plausible rates. The user's LinkedIn account carries the agreement with the no-scraping clause. When enforcement comes, it comes as a restriction or ban on the installer's account.</p>
+    <p>ContactOut, meanwhile, holds no account with LinkedIn, runs no scrapers of its own, and sits on the aggregated database server-side, selling it back one reveal at a time. The people whose data fills it, the profile subjects, never consented to anything and carry the privacy harm. Three parties, and the only one holding both the asset and zero exposure is the vendor.</p>
+
+    <figure class="evidence">
+      <img src="verdict-snippet.png" width="1040" height="1235" loading="lazy" decoding="async" alt="Verdict snippet: the crowd-leech loop annotated in minified bundle identifiers, from harvest to server gate to credit wallets">
+      <figcaption>Exhibit A: the entire business loop in verbatim bundle identifiers, harvest to gate to wallets. Byte-offset anchored in the evidence repo.</figcaption>
+    </figure>
+
+    <h2><span class="no">09</span>Reproduce it yourself</h2>
+    <p>The full case file is public: seven findings documents, the verbatim manifest, annotated snippets with byte offsets, and the tooling to rerun everything against the current store build.</p>
+    <p><a href="https://github.com/saladin0x1/chrome-extension-analysis">github.com/saladin0x1/chrome-extension-analysis</a></p>
+    <p>The CRX fetcher strips the store signature wrapper, the context extractor pulls readable neighborhoods out of the minified bundle, and every snippet in the repo carries its file and offset so you do not have to trust a single word of mine. Run it before the extension updates past v5.18.3, and note what the store still says about it while you do.</p>
+
+    <p class="closing"><em>Not magic, not malware. A crowd, leeched by consent of one and to the profit of another.</em></p>
+    <p class="disclosure">Disclosure note: analysis was performed on a publicly downloadable store artifact for interoperability and research understanding. No vendor code is republished beyond short annotated excerpts. The recommendation thread and its participants are not named; the argument survives without them. All trademarks belong to their owners.</p>
+
+    <nav class="links" aria-label="References">
+      <a href="/articles/working-on-it/">Previous case file: Working on It</a>
+      <a href="https://github.com/saladin0x1/chrome-extension-analysis">Evidence repo</a>
+      <a href="https://hackerone.com/saladin0x1">HackerOne</a>
+      <a href="/">saladin.su</a>
+    </nav>
+  </article>
+  <!-- Cloudflare Web Analytics -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3172d3151b5647eda6e971e2b390e66c"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+</body>
+</html>

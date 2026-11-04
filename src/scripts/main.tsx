@@ -208,6 +208,12 @@ const ARTICLES = [
     meta: 'API KEY · SCOPE',
     url: '/articles/working-on-it/',
   },
+  {
+    index: '05',
+    name: 'The Crowd Leech',
+    meta: 'GRAYWARE · SCRAPING',
+    url: '/articles/the-crowd-leech/',
+  },
 ];
 
 const SelectedWork = memo(function SelectedWork() {
