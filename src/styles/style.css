@@ -375,6 +375,8 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 3px;
+    flex: 1;
+    min-width: 0;
 }
 
 .track-info--playing {

@@ -749,11 +749,29 @@ const Marquee = memo(function Marquee({ text, className = '' }: MarqueeProps) {
     if (!el || !box) return;
 
     el.getAnimations().forEach((a) => a.cancel());
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const overflow = el.scrollWidth - box.offsetWidth;
     if (overflow <= 0) {
       el.style.transform = 'translate3d(0,0,0)';
+      // Short text still breathes: slide left-right inside the spare space
+      // (padding reserves the slack, so nothing ever clips).
+      const slack = Math.min(box.offsetWidth - el.scrollWidth - 4, 60);
+      if (!reduceMotion && slack >= 8) {
+        el.style.paddingLeft = `${slack}px`;
+        el.animate(
+          [
+            { transform: 'translate3d(0,0,0)' },
+            { transform: `translate3d(${-slack}px,0,0)`, offset: 0.5 },
+            { transform: 'translate3d(0,0,0)' },
+          ],
+          { duration: 7000, iterations: Infinity, easing: 'ease-in-out' }
+        );
+      } else {
+        el.style.paddingLeft = '2px';
+      }
       return;
     }
+    el.style.paddingLeft = '2px';
 
     const HOLD_START = 3000;
     const HOLD_END = 2000;
