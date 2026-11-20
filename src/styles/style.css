@@ -260,6 +260,35 @@ body::before {
     color: #fff;
 }
 
+/* Research widget (mirrors the BLOGS block styling) */
+.research-widget {
+    gap: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.research-name-link {
+    text-decoration: none;
+}
+
+.work-detail-sep {
+    color: var(--text-ghost);
+    margin: 0 4px;
+}
+
+.work-detail a {
+    color: var(--text-dim);
+    text-decoration-color: rgba(255, 255, 255, 0.12);
+    text-underline-offset: 3px;
+    transition: color 0.2s ease;
+}
+
+.work-detail a:hover,
+.work-detail a:focus-visible {
+    color: #fff;
+}
+
 /* Reading Corner */
 .reading-corner {
     display: flex;
@@ -714,9 +743,9 @@ body::before {
         width: 100%;
     }
 
-    /* 4. Reserved slot (old Spotify box) — integer renumber, order: 3.5
+    /* 4. Research outputs (old reserved slot) — integer renumber, order: 3.5
        is invalid CSS (order takes integers) and silently drops to 0 */
-    .reserved-widget {
+    .research-widget {
         order: 4;
         width: 100%;
     }

@@ -18,6 +18,11 @@ Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests ce
 - [Working on It — public API key and remediation theater](https://saladin.su/articles/working-on-it/): A public-by-design client key retained read, write, content-publishing, and notification capabilities. Five months later, symptom-level image filtering and object-scoped rate limits still missed the authorization failure. Names and operational details are redacted.
 - [The Crowd Leech — grayware extension case file](https://saladin.su/articles/the-crowd-leech/): Static reverse engineering of a recommended Chrome extension: whole-DOM harvesting, bystander shipping, server-directed upload gating, internal API tapping, and credit-wallet resale. The public thread that prompted the analysis is preserved as redacted screenshots, ending on why deletion is not discourse. Byte-offset anchored evidence in the public repo.
 
+## Research
+
+- [State of Sec Morocco 2026 — White Paper](https://doi.org/10.5281/zenodo.23947850): First edition of an open, anonymous community survey of Morocco's cybersecurity people. 380+ respondents, all 12 regions plus the diaspora, October 31 to November 15, 2026. 52 pages covering careers, pay, bug bounty, tools, AI, morale, and the Moroccan Cyber Sentiment Index (43.6/100). Open access, CC BY 4.0.
+- [State of Sec Morocco 2026 — Aggregated Results](https://doi.org/10.5281/zenodo.24337485): Open dataset behind the White Paper: shares for 50 of 52 questions, published breakdowns, and the sentiment index in JSON, with the full questionnaire. Aggregates only, no individual answers. ODbL. Also mirrored at github.com/saladin0x1/stateofsec.ma.
+
 ## Verified Profiles
 
 - [GitHub](https://github.com/saladin0x1): Public code and security projects.

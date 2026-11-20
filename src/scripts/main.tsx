@@ -869,19 +869,29 @@ function FrequencyWidget({ freq }: { freq: FrequencyState }) {
   );
 }
 
-// Reserved slot: the old Spotify box. Last.fm covers YouTube + Spotify
-// scrobbles, so the interior stays empty until something else moves in.
-const ReservedBox = memo(function ReservedBox() {
-  return <div className="widget-box sm reserved-widget" aria-hidden="true" />;
-});
+// State of Sec Morocco 2026: the project row goes to stateofsec.ma,
+// the two outputs under it go to their Zenodo DOIs.
+const RESEARCH_SITE_URL = 'https://stateofsec.ma';
+const RESEARCH_PAPER_URL = 'https://doi.org/10.5281/zenodo.23947850';
+const RESEARCH_DATA_URL = 'https://doi.org/10.5281/zenodo.24337485';
 
-const NavWidget = memo(function NavWidget() {
+const ResearchWidget = memo(function ResearchWidget() {
   return (
-    <div className="widget-box md nav-widget">
-      <div className="nav-item">_ _ _ _ _ _</div>
-      <div className="nav-item">_ _ _ _ _ _</div>
-      <div className="nav-item">_ _ _ _ _ _</div>
-      <div className="nav-item">_ _ _ _ _ _</div>
+    <div className="widget-box md research-widget">
+      <h2 className="work-header">RESEARCH</h2>
+      <div className="work-line">
+        <span className="work-index">01</span>
+        <a className="research-name-link" href={RESEARCH_SITE_URL} target="_blank" rel="noopener noreferrer">
+          <span className="work-name">SEC MA 2026</span>
+        </a>
+        <span className="work-leader"></span>
+        <span className="work-meta">FIELDWORK · 2026</span>
+      </div>
+      <div className="work-detail">
+        <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">white paper</a>
+        <span className="work-detail-sep">·</span>
+        <a href={RESEARCH_DATA_URL} target="_blank" rel="noopener noreferrer">data</a>
+      </div>
     </div>
   );
 });
@@ -969,8 +979,7 @@ function RightColumn() {
     <aside className="right-col" aria-label="Live status and links">
       <StatusWidget freq={freq} />
       <FrequencyWidget freq={freq} />
-      <ReservedBox />
-      <NavWidget />
+      <ResearchWidget />
       <SocialGrid />
       <BottomFiller />
       <Footer />
