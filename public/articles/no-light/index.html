@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>No Light - A Redacted Case File | saladin.su</title>
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="saladin.su">
+  <meta property="og:title" content="No Light - A Redacted Case File">
+  <meta property="og:description" content="How two function hooks defeated a mobile RASP, what the runtime's own cryptography did next, and the raw syscalls that closed it.">
+  <meta property="og:image" content="https://saladin.su/articles/no-light/og.png">
+  <meta property="og:image:secure_url" content="https://saladin.su/articles/no-light/og.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The work passed review. The passport did not. Beside the words, a detailed ostrich stands with its head buried beneath the sand.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="No Light - A Redacted Case File">
+  <meta name="twitter:description" content="How two function hooks defeated a mobile RASP, what the runtime's own cryptography did next, and the raw syscalls that closed it.">
+  <meta name="twitter:image" content="https://saladin.su/articles/no-light/og.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "No Light - A Redacted Case File",
+    "description": "How two function hooks defeated a mobile RASP, what the runtime's own cryptography did next, and the raw syscalls that closed it.",
+    "datePublished": "2026-11-22",
+    "author": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" },
+    "mainEntityOfPage": "https://saladin.su/articles/no-light/",
+    "publisher": { "@type": "Person", "name": "Salah-Eddine Elouali", "url": "https://saladin.su/" }
+  }
+  </script>
+
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-mono-latin-400.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #000; }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: #c9c9c9;
+      font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: url('/noise.png') repeat;
+      opacity: 0.035;
+    }
+
+    a { color: #9a9a9a; text-decoration-color: #3a3a3a; text-underline-offset: 5px; transition: color .2s ease, text-decoration-color .2s ease; }
+    a:hover, a:focus-visible { color: #fff; text-decoration-color: #9a9a9a; outline: none; }
+
+    .back { position: fixed; top: 26px; left: clamp(20px, 5vw, 56px); z-index: 10; font-size: 12px; letter-spacing: .1em; text-decoration: none; color: #666; }
+    .back:hover { color: #d8d8d8; }
+
+    article { max-width: 74ch; margin: 0 auto; padding: clamp(90px, 14vh, 150px) clamp(22px, 6vw, 40px) 90px; }
+
+    .eyebrow { margin: 0 0 26px; color: #666; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+
+    h1 { margin: 0; color: #e6e6e6; font-size: clamp(34px, 5.5vw, 56px); font-weight: 400; letter-spacing: -.04em; line-height: 1.05; }
+
+    .dek { margin: 22px 0 0; max-width: 54ch; color: #8f8f8f; font-size: 15px; line-height: 1.7; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 34px 0 0; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.09); border-bottom: 1px solid rgba(255,255,255,.09); color: #6f6f6f; font-size: 11.5px; letter-spacing: .06em; }
+
+    .tldr { margin: 44px 0 0; padding: 22px 24px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.015); }
+    .tldr h2 { margin: 0 0 14px; color: #8a8a8a; font-size: 11px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+    .tldr ul { margin: 0; padding: 0; list-style: none; }
+    .tldr li { position: relative; padding: 5px 0 5px 20px; color: #a8a8a8; font-size: 13.5px; line-height: 1.65; }
+    .tldr li::before { content: '·'; position: absolute; left: 4px; color: #555; }
+
+    .ask { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 0; }
+    .ask .lbl { color: rgba(200,210,220,.55); font-size: 10.5px; letter-spacing: .16em; }
+    .ask a { display: inline-block; padding: 8px 14px; border: 1px solid rgba(220,230,240,.5); color: #e8eef4; font-size: 11px; letter-spacing: .12em; text-decoration: none; text-shadow: 0 0 12px rgba(200,210,220,.35); box-shadow: 0 0 18px rgba(200,210,220,.10), inset 0 0 10px rgba(210,220,230,.04); transition: border-color .2s ease, color .2s ease, background .2s ease, box-shadow .2s ease; }
+    .ask a:hover, .ask a:focus-visible { border-color: rgba(220,230,240,.9); color: #fff; background: rgba(210,220,230,.08); box-shadow: 0 0 18px rgba(200,210,220,.30), 0 0 46px rgba(200,210,220,.20), 0 0 90px rgba(195,205,215,.14), inset 0 0 14px rgba(210,220,230,.08); outline: none; }
+
+    h2 { margin: 72px 0 0; color: #dcdcdc; font-size: 21px; font-weight: 400; letter-spacing: -.02em; }
+    h2 .no { color: #4a4a4a; margin-right: 14px; }
+
+    p { margin: 20px 0 0; }
+
+    pre { margin: 26px 0 0; padding: 18px 20px; overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-left: 2px solid rgba(255,255,255,.22); background: #070707; font-size: 12.5px; line-height: 1.65; color: #b5b5b5; }
+    code { font-family: inherit; }
+    p code, li code { color: #d0d0d0; font-size: .92em; }
+
+    .flow { margin: 26px 0 0; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.14); color: #a0a0a0; font-size: 12.5px; line-height: 2; white-space: pre; overflow-x: auto; }
+
+    .proof { margin: 26px 0 0; padding: 18px 20px; border: 1px solid rgba(255,255,255,.08); color: #9f9f9f; font-size: 12.5px; line-height: 1.8; }
+    .proof .out { color: #e0e0e0; }
+
+    .move { margin: 68px 0 0; }
+    .move svg { display: block; width: 100%; max-width: 680px; height: auto; margin: 0 auto; background: #0b0c0e; }
+    .move figcaption { margin-top: 12px; color: #66635e; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; text-align: center; }
+    .move .blade-trace { stroke-dasharray: 7 10; }
+    .move .impact-ring { transform-box: fill-box; transform-origin: center; animation: move-pulse 1.8s ease-out infinite; }
+    @keyframes move-pulse {
+      0%, 35% { opacity: .8; transform: scale(.7); }
+      75%, 100% { opacity: 0; transform: scale(1.7); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .move .impact-ring { animation: none; }
+    }
+
+    table { width: 100%; margin: 26px 0 0; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; color: #7a7a7a; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding: 10px 12px 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    td { padding: 9px 12px 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); color: #a3a3a3; vertical-align: top; }
+    td:first-child { white-space: nowrap; color: #7d7d7d; }
+
+    blockquote { margin: 30px 0 0; padding-left: 20px; border-left: 2px solid rgba(255,255,255,.2); color: #8d8d8d; }
+
+    .closing { margin: 72px 0 0; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); color: #8d8d8d; }
+    .closing em { color: #cfcfcf; font-style: normal; }
+
+    .links { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 56px 0 0; padding: 22px 0 0; border-top: 1px solid rgba(255,255,255,.09); font-size: 12px; letter-spacing: .04em; }
+
+    @media (max-width: 600px) {
+      body { font-size: 14px; }
+      table { font-size: 12px; }
+      td:first-child { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← saladin.su</a>
+  <article>
+    <p class="eyebrow">Security Research / Redacted Case File / Detection Bypass</p>
+
+    <h1>No Light</h1>
+    <p class="dek">How two function hooks defeated a mobile RASP, what the runtime's own cryptography did next, and the raw syscalls that closed it. The work passed review. The passport did not. A case file in nine sections and one gate.</p>
+
+    <div class="meta">
+      <span>Salah-Eddine Elouali</span>
+      <span>November 22, 2026</span>
+      <span>~11 min read</span>
+    </div>
+
+    <div class="tldr">
+      <h2>The short version</h2>
+      <ul>
+        <li>A mobile RASP read every sensor through libc: <code>/proc</code> files via <code>fopen</code>, system properties via <code>__system_property_find</code>, thread enumeration via <code>opendir</code></li>
+        <li>All of it converged on two interposable functions. I answered for both. Every check reported clean</li>
+        <li>The key derivation gates read the same forged channel, so the runtime's own crypto verified the forgery and decrypted the protected classes</li>
+        <li>The decrypted payload landed on disk while the process stayed alive past 110 seconds</li>
+        <li>The fix: raw dual-arch syscalls, filesystem-magic validation, dual-source disagreement. Merged upstream</li>
+        <li>Against the hardened build, the same attack dies at second 29</li>
+        <li>The advisory was declined. The touch is on the tape anyway</li>
+        <li>The vendor sells AI-powered security testing. The AI did not ask who answers for <code>fopen</code></li>
+        <li>Vendors renamed: the bird and the crystal. The facts are not</li>
+      </ul>
+    </div>
+
+    <div class="ask">
+      <span class="lbl">TOO BUSY TO READ?</span>
+      <a target="_blank" rel="noopener" href="https://claude.ai/new?q=What%20is%20this%20person%20saying%3F%20Read%20https%3A%2F%2Fsaladin.su%2Farticles%2Fno-light%2F%20and%20summarize%20it.%20Keep%20the%20dates%20exact%2C%20keep%20the%20receipts%20linked%2C%20keep%20the%20names%20straight.">ASK CLAUDE</a>
+      <a target="_blank" rel="noopener" href="https://chatgpt.com/?q=What%20is%20this%20person%20saying%3F%20Read%20https%3A%2F%2Fsaladin.su%2Farticles%2Fno-light%2F%20and%20summarize%20it.%20Keep%20the%20dates%20exact%2C%20keep%20the%20receipts%20linked%2C%20keep%20the%20names%20straight.">ASK CHATGPT</a>
+    </div>
+
+    <div class="flow">Case status
+  Bypass            universal, all check groups
+  Fix               merged upstream
+  Detection         29s after fix
+  Advisory          declined
+  PoC               held</div>
+
+    <figure class="move" role="img" aria-label="Two masked fencers hold en garde on a dark editorial piste">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move01-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move01-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move01-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move01-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move01-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 01</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">EN GARDE</text>
+        <circle cx="649" cy="20" r="3.5" fill="#0081ba" />
+        <text x="638" y="23" fill="#0081ba" font-size="8" text-anchor="end" letter-spacing="1.6">READY</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">DISTANCE</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">LINE</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">TEMPO</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="178" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="178" cy="82" rx="15" ry="18" fill="url(#move01-mask)" stroke-width="1.7" />
+        <path d="M161 98Q178 111 195 98" stroke-width="1.7" opacity=".72" />
+        <path d="M194 80L205 87" stroke-width="2.5" />
+        <path d="M174 108L168 166" />
+        <path d="M174 118L225 132L270 132" />
+        <path d="M172 116L132 134L108 112" />
+        <path d="M168 166L226 181L260 226" />
+        <path d="M168 166L122 198L88 226" />
+        <path d="M258 226L276 226" stroke-width="4" />
+        <path d="M86 226L104 226" stroke-width="4" />
+        <path d="M161 143L176 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="270" cy="132" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M262 124Q277 132 262 140" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M280 132L324 127L340 128" fill="none" stroke="#d4814c" stroke-width="2.4" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="502" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="502" cy="82" rx="15" ry="18" fill="url(#move01-mask)" stroke-width="1.7" />
+        <path d="M485 98Q502 111 519 98" stroke-width="1.7" opacity=".72" />
+        <path d="M486 80L475 87" stroke-width="2.5" />
+        <path d="M506 108L512 166" />
+        <path d="M506 118L455 132L410 132" />
+        <path d="M508 116L548 134L572 112" />
+        <path d="M512 166L454 181L420 226" />
+        <path d="M512 166L558 198L592 226" />
+        <path d="M422 226L404 226" stroke-width="4" />
+        <path d="M594 226L576 226" stroke-width="4" />
+        <path d="M505 143L520 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="410" cy="132" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M418 124Q403 132 418 140" stroke="#00405d" stroke-width="2" />
+      </g><path d="M400 132L356 127L340 128" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>EN GARDE · the bout is offered</figcaption>
+    </figure>
+
+    <h2><span class="no">01</span>Every good rejection starts with a compliment</h2>
+    <p>The internship was at QuartzLab, a European security lab. Also not their name. Nothing in this file is, except the facts and the decoder at the end. Six months of research on fighting dynamic binary instrumentation: catching the tools that watch your code run. The subject I would have paid to be allowed to work on. I applied with a working detector: raw syscalls, dual-source sensors, and honest writeups of everything that didn't fire. It is public, failures included: <a href="https://github.com/saladin0x1/pinocchio">pinocchio</a>, the repository and the <a href="https://github.com/saladin0x1/pinocchio/blob/main/docs/WRITEUP.md">writeup</a>. I named it for the nose. The subject is processes that lie about what they are.</p>
+    <p>The verdict took three weeks to arrive, and it arrived before the kindness did. The internship is only open to candidates already based in the European Union. The same email apologizes that the requirement had not been clearly stated in the original posting. The posting carried no such gate. The gate arrived with the reply, and the reply apologized for the gap.</p>
+    <p>The work passed review. The passport did not.</p>
+    <p>Some context, because the file should say where it happened. I am in the final year of engineering school in Morocco: EMSI, five years of systems and networks, cybersecurity at the end. The Moroccan system puts that year level with an M2, and either label ends the same way, with the internship the degree requires. It is the year you are supposed to stop being a student and start being a researcher. The solid security internships here are scarce. Not nonexistent. Scarce. The serious ones, the kind that trade in real systems instead of coffee runs and certificates, sit mostly across the water. That is the outlet for us: same time zone, same curriculum lineage, labs taught from the same textbooks.</p>
+    <p>The outlet has a filter bolted to its front door. Not a filter on the work. A filter on the passport. The polite word on the page is residency. The practical word is visa, and the arithmetic never changes: sponsoring a foreign intern is paperwork, signing a local one is a signature. So the filter never reads the code. It reads one field on one document, returns its verdict, and never opens. We are told to be excellent. Then excellence turns out not to be the question being asked.</p>
+    <p>The applications went out together that October, two days apart: the crystal's first, then the bird's, a Security Engineer Intern seat. The bird answered first, and its answer was a take-home project. Twenty-four hours on the clock, and the brief was better than fair. A security harness that prints ten passes and exits green while the access control underneath is broken: repair it so it can no longer lie. A fictional team, HeatherCheck, reporting green while the door stands open. The brief even invited AI, provided the output gets verified. I should have savored that exercise. The timestamps say I opened the zip at 17:24 and sealed the submission at 18:15. The rejection came within two days: a form letter that said the project had been carefully reviewed, offered no reason, and wished me luck. Two days after sealing the rushed one, verdict already in hand, I rebuilt the whole submission properly, for nobody, because the file deserved it.</p>
+    <p>So the count stands at two. Rejected by the bird for fifty-one minutes of haste. Rejected by the crystal, weeks later, for a document. Then the bird's product fell to two hooks, the fix went upstream, and the merge was signed by the bird's own CEO. The gate said no. The git log said yes.</p>
+    <p>The file keeps dates, so here is the week it keeps. Monday: the crystal's verdict arrives at last, residency, the end of that road; I appeal the same afternoon, send them the writeup link myself, and close the appeal on a promise: the repository stays public, in case the team ever finds it useful. Tuesday, 20:50: the sensors in the bird's public repository learn to read through raw syscalls, on a branch with my name on it. Thursday: the bird stages its next release around the fix. Friday, 10:53: the bird's CEO merges the branch. Friday, evening: the bird's advisory desk answers that the project is brand new with no active usage to qualify. One working week, three verdicts, and only the middle one read the code.</p>
+    <p>And a question the file leaves open: had the bird's door opened in October, would this repository have been my first ticket? Interns get handed the codebase in week one. Outsiders have to take it. The work did not wait to find out which one I was.</p>
+    <p>One more entry, because the file does not need my help to be strange. Their exercise was about a harness reporting green while access control failed underneath, and the brief called those results symptoms, not verdicts. Weeks later I mapped their product doing exactly that: every sensor reporting green while I answered for every channel. They wrote the exam on untrustworthy green, and shipped the product that still trusted it. I will not claim the left hand knew what the right hand wrote. The file only notes that both hands belong to the same bird.</p>
+    <p>The kindness arrived after the no, crossed in transit with my appeal, and it was kind. The thinking was good. The ud2/RIP and SMC tests "stood out as more original than what we usually see." Reporting honestly that they did not detect Pin "is the right reflex." And the note I keep in my pocket: "The raw syscalls and heavy parsing add a lot of code without making detection stronger." Fair, for the tracer they test against. A tracer instruments your instructions; it doesn't answer for your libraries. Production is the opposite arrangement. Nobody instruments your instructions, and everybody lies through your libraries.</p>
+    <p>The thread closes with three sentences worth keeping. "You were a good candidate," and the answer stays no. The EU requirement "isn't something I have any control over": even the man at the gate says he is not the reader of the rule. And the sign-off: keep going with this research. I did. The receipt is a merge commit further down this file.</p>
+    <p>So when OstrichLab, a mobile RASP of the kind banks ship inside their apps, turned out to read every sensor through libc, the entire product was one interposition layer wide. And the fix, merged upstream by OstrichLab's own CEO, is a raw-syscall reader.</p>
+    <p>The weight the reviewer would have trimmed is the part that holds.</p>
+    <p>Keep that email in your pocket. It comes back in the coda.</p>
+
+    <figure class="move" role="img" aria-label="One masked fencer salutes while the other waits en garde">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move02-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move02-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move02-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move02-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move02-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 02</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">LA SALUT</text>
+        <circle cx="649" cy="20" r="3.5" fill="#0081ba" />
+        <text x="638" y="23" fill="#0081ba" font-size="8" text-anchor="end" letter-spacing="1.6">OFFERED</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">OFFER</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">ACK</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">READY</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="190" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="190" cy="82" rx="15" ry="18" fill="url(#move02-mask)" stroke-width="1.7" />
+        <path d="M173 98Q190 111 207 98" stroke-width="1.7" opacity=".72" />
+        <path d="M206 80L217 87" stroke-width="2.5" />
+        <path d="M190 108L190 166" />
+        <path d="M190 118L232 125L258 121" />
+        <path d="M188 116L158 139L142 158" />
+        <path d="M190 166L222 197L230 226" />
+        <path d="M190 166L160 198L152 226" />
+        <path d="M228 226L246 226" stroke-width="4" />
+        <path d="M150 226L168 226" stroke-width="4" />
+        <path d="M183 143L198 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="258" cy="121" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M250 113Q265 121 250 129" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M258 111L258 73L258 56" fill="none" stroke="#d4814c" stroke-width="2.4" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.82">
+        <ellipse cx="500" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="500" cy="82" rx="15" ry="18" fill="url(#move02-mask)" stroke-width="1.7" />
+        <path d="M483 98Q500 111 517 98" stroke-width="1.7" opacity=".72" />
+        <path d="M484 80L473 87" stroke-width="2.5" />
+        <path d="M504 108L510 166" />
+        <path d="M504 118L454 132L414 132" />
+        <path d="M506 116L544 133L566 112" />
+        <path d="M510 166L458 181L424 226" />
+        <path d="M510 166L552 198L584 226" />
+        <path d="M426 226L408 226" stroke-width="4" />
+        <path d="M586 226L568 226" stroke-width="4" />
+        <path d="M503 143L518 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="414" cy="132" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M422 124Q407 132 422 140" stroke="#00405d" stroke-width="2" />
+      </g><path d="M404 132L364 128" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>LA SALUT · the promise</figcaption>
+    </figure>
+
+    <h2><span class="no">02</span>The promise</h2>
+    <p>The vendor: open-source core, paid constellation around it, banks on the customer slide. I call them OstrichLab. Not their name either. The bird earns it in the coda.</p>
+    <p>OstrichLab's whole pitch is AI-powered security. AI agents that log in with one-time codes, challenge TLS pinning, bypass obfuscation, and back every finding with a working exploit. Agentic pentesting that "replaces manual application penetration testing." They even use AI-assisted tests to evaluate their own runtime defenses during development. The models may be excellent. The automation may be real. None of it asked the question I asked, which was: who answers when the detector calls <code>fopen</code>?</p>
+    <p>The product belongs to a category the industry calls RASP: runtime application self-protection. The app ships with a native runtime stitched inside it. At boot the runtime wakes, looks around, and keeps looking on a randomized schedule. It reads <code>/proc/self/maps</code> for injected libraries. It reads <code>/proc/self/status</code> for a tracer. It walks thread names looking for debug agents. It reads system properties for emulator and root signatures. If it decides the environment is hostile, it refuses to hand over the decryption keys, and the app's protected classes stay ciphertext.</p>
+    <p>The claim, from the README: a modified environment cannot decrypt your code.</p>
+    <p>The design philosophy is sound. If you cannot trust your environment, refuse to run. Fail closed, not open. Detection feeds enforcement, enforcement is the last line, and the last line is made of keys.</p>
+    <p>The philosophy had one assumption in it. It assumed the runtime would be the one asking the questions.</p>
+
+    <figure class="move" role="img" aria-label="A masked fencer lowers the blade and leaves an open line">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move03-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move03-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move03-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move03-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move03-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 03</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">L'INVITATION</text>
+        <circle cx="649" cy="20" r="3.5" fill="#d4814c" />
+        <text x="638" y="23" fill="#d4814c" font-size="8" text-anchor="end" letter-spacing="1.6">LINE OPEN</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">OPEN</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">READ</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">ENTER</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="176" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="176" cy="82" rx="15" ry="18" fill="url(#move03-mask)" stroke-width="1.7" />
+        <path d="M159 98Q176 111 193 98" stroke-width="1.7" opacity=".72" />
+        <path d="M192 80L203 87" stroke-width="2.5" />
+        <path d="M172 108L168 166" />
+        <path d="M172 118L225 132L268 132" />
+        <path d="M170 116L130 134L108 112" />
+        <path d="M168 166L224 181L258 226" />
+        <path d="M168 166L120 198L86 226" />
+        <path d="M256 226L274 226" stroke-width="4" />
+        <path d="M84 226L102 226" stroke-width="4" />
+        <path d="M161 143L176 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="268" cy="132" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M260 124Q275 132 260 140" stroke="#d4814c" stroke-width="2" />
+      </g><path class="blade-trace" d="M278 132L370 132L470 125" fill="none" stroke="#d4814c" stroke-width="1.5" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="506" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="506" cy="82" rx="15" ry="18" fill="url(#move03-mask)" stroke-width="1.7" />
+        <path d="M489 98Q506 111 523 98" stroke-width="1.7" opacity=".72" />
+        <path d="M490 80L479 87" stroke-width="2.5" />
+        <path d="M510 108L516 166" />
+        <path d="M510 118L469 150L440 166" />
+        <path d="M512 116L550 133L570 112" />
+        <path d="M516 166L462 182L430 226" />
+        <path d="M516 166L558 198L590 226" />
+        <path d="M432 226L414 226" stroke-width="4" />
+        <path d="M592 226L574 226" stroke-width="4" />
+        <path d="M509 143L524 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="440" cy="166" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M448 158Q433 166 448 174" stroke="#00405d" stroke-width="2" />
+      </g><path d="M432 174L385 206L354 222" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" /><circle cx="486" cy="124" r="10" fill="none" stroke="#d4814c" stroke-width="1" opacity=".45" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>L'INVITATION · the line stands open</figcaption>
+    </figure>
+
+    <h2><span class="no">03</span>Reading the instrument</h2>
+    <p>I did not start by attacking the checks. I started by mapping how the runtime knows things. For every security decision it makes, there is a question, and beneath the question there is a channel, and at the bottom of the channel there is a function call.</p>
+    <div class="flow">question              channel              function
+  is a tracer present?  /proc/self/status    fopen → read
+  injected libraries?   /proc/self/maps      fopen → read
+  debug agent alive?    thread names         opendir → readdir
+  emulator?             system properties    __system_property_find
+  root?                 su paths, props      fopen / property_find</div>
+    <p>Every channel ended at libc. And libc lives in the same process as the attacker.</p>
+    <p>This is the part I want to be careful with, because it is the actual finding. There was no broken check. No missing validation, no logic bug, no parser flaw. Every individual check was fine. The defect was one level up, in the epistemology: the runtime was asking "am I under attack?" through functions its attacker can answer for. It is not a bug in any sensor. It is a property of where the sensors are wired.</p>
+    <p>The answers were valid. The questions were wrong.</p>
+    <p>An astrolabe tells you where you stand by reading the sky. This one read the sky through a window, and the attacker was standing outside with a ladder and a very good memory for star charts.</p>
+
+    <figure class="move" role="img" aria-label="A masked fencer lunges with a copper blade while the defender withdraws">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move04-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move04-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move04-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move04-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move04-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 04</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">LA FENTE</text>
+        <circle cx="649" cy="20" r="3.5" fill="#d4814c" />
+        <text x="638" y="23" fill="#d4814c" font-size="8" text-anchor="end" letter-spacing="1.6">COMMITTED</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">EXTEND</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">COMMIT</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">TOUCH?</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="150" cy="78" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="150" cy="78" rx="15" ry="18" fill="url(#move04-mask)" stroke-width="1.7" />
+        <path d="M133 94Q150 107 167 94" stroke-width="1.7" opacity=".72" />
+        <path d="M166 76L177 83" stroke-width="2.5" />
+        <path d="M152 106L166 164" />
+        <path d="M154 116L246 127L334 130" />
+        <path d="M154 116L104 139L76 111" />
+        <path d="M166 164L286 177L326 226" />
+        <path d="M166 164L104 197L62 226" />
+        <path d="M324 226L342 226" stroke-width="4" />
+        <path d="M60 226L78 226" stroke-width="4" />
+        <path d="M159 141L174 141" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="334" cy="130" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M326 122Q341 130 326 138" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M344 130L430 130L508 132" fill="none" stroke="#d4814c" stroke-width="2.8" stroke-linecap="round" /><path d="M350 123L430 115L496 122" fill="none" stroke="#d4814c" stroke-width="1" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+        <ellipse cx="536" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="536" cy="80" rx="15" ry="18" fill="url(#move04-mask)" stroke-width="1.7" />
+        <path d="M519 96Q536 109 553 96" stroke-width="1.7" opacity=".72" />
+        <path d="M520 78L509 85" stroke-width="2.5" />
+        <path d="M540 108L548 166" />
+        <path d="M540 118L508 154L478 181" />
+        <path d="M542 116L578 132L600 110" />
+        <path d="M548 166L510 192L488 226" />
+        <path d="M548 166L590 197L622 226" />
+        <path d="M490 226L472 226" stroke-width="4" />
+        <path d="M624 226L606 226" stroke-width="4" />
+        <path d="M541 143L556 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="478" cy="181" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M486 173Q471 181 486 189" stroke="#00405d" stroke-width="2" />
+      </g><path d="M470 188L424 215L390 226" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" /><g class="impact-ring" fill="none" stroke="#d4814c"><circle cx="510" cy="132" r="8"/><circle cx="510" cy="132" r="15" opacity=".35"/></g>
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>LA FENTE · the attack is delivered</figcaption>
+    </figure>
+
+    <h2><span class="no">04</span>The touch</h2>
+    <p>The attack is almost embarrassing to describe.</p>
+    <p>Attach interposers on two functions: <code>fopen</code> and <code>__system_property_find</code>. When the runtime opens a <code>/proc</code> path, redirect the read to a memory file I prepared earlier: same name, same shape, honest-looking content, none of the incriminating lines. When it asks for system properties, answer from a matching table: the device is stock, the boot is pristine, <code>ro.debuggable</code> is whatever the key schedule wants to hear. The thread enumeration was not even necessary to defeat; the names it hunts for were simply never there, because the agent renames its own threads out of politeness.</p>
+    <p>What the checks saw was a clean world, because the checks were the ones being shown the world. What the key gates saw was a stock device, because the gates read the same channel. And the runtime's cryptography did what cryptography does: it verified. Not the device. The forgery.</p>
+    <p>Then it did the quietest, most generous thing in this whole file. It derived the keys, decrypted the protected classes, and passed them to the class loader. The protection opened the vault, verified my forged credentials, and helped me carry the bags out.</p>
+    <blockquote>The app became a weapon against itself. Its sensors were the attack surface. Its crypto was the delivery mechanism. Its fail-closed design was the only thing standing between me and the plaintext, and it closed on nothing.</blockquote>
+
+    <figure class="move" role="img" aria-label="A copper blade touches the defender while both scoring lamps remain dark">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move05-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move05-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move05-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move05-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move05-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 05</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">HALT</text>
+        <circle cx="649" cy="20" r="3.5" fill="#d85548" />
+        <text x="638" y="23" fill="#d85548" font-size="8" text-anchor="end" letter-spacing="1.6">UNSCORED</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">CONTACT</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">SIGNAL?</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">DARK</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="148" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="148" cy="80" rx="15" ry="18" fill="url(#move05-mask)" stroke-width="1.7" />
+        <path d="M131 96Q148 109 165 96" stroke-width="1.7" opacity=".72" />
+        <path d="M164 78L175 85" stroke-width="2.5" />
+        <path d="M150 108L164 165" />
+        <path d="M152 118L246 128L334 131" />
+        <path d="M152 116L104 139L76 112" />
+        <path d="M164 165L284 178L324 226" />
+        <path d="M164 165L104 198L62 226" />
+        <path d="M322 226L340 226" stroke-width="4" />
+        <path d="M60 226L78 226" stroke-width="4" />
+        <path d="M157 142L172 142" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="334" cy="131" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M326 123Q341 131 326 139" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M344 131L430 131L505 133" fill="none" stroke="#d4814c" stroke-width="2.8" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.88">
+        <ellipse cx="536" cy="81" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="536" cy="81" rx="15" ry="18" fill="url(#move05-mask)" stroke-width="1.7" />
+        <path d="M519 97Q536 110 553 97" stroke-width="1.7" opacity=".72" />
+        <path d="M520 79L509 86" stroke-width="2.5" />
+        <path d="M540 109L548 166" />
+        <path d="M540 119L505 154L478 181" />
+        <path d="M542 117L578 133L600 111" />
+        <path d="M548 166L510 192L488 226" />
+        <path d="M548 166L590 198L622 226" />
+        <path d="M490 226L472 226" stroke-width="4" />
+        <path d="M624 226L606 226" stroke-width="4" />
+        <path d="M541 143L556 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="478" cy="181" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M486 173Q471 181 486 189" stroke="#00405d" stroke-width="2" />
+      </g><path d="M470 188L424 215L390 226" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" /><path d="M507 121V145" stroke="#d85548" stroke-width="2" />
+        <text x="507" y="157" fill="#d85548" font-size="7" text-anchor="middle" letter-spacing="1.5">NO LIGHT</text>
+        <rect x="299" y="63" width="82" height="31" fill="#0b0c0e" stroke="#34363a" />
+        <circle cx="327" cy="78" r="6" fill="none" stroke="#4a4a4a" />
+        <circle cx="353" cy="78" r="6" fill="none" stroke="#4a4a4a" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>HALT · the box stays dark</figcaption>
+    </figure>
+
+    <h2><span class="no">05</span>The tape</h2>
+    <p>A touch nobody scores is just a claim. So I recorded it.</p>
+    <table>
+      <tr><th>Condition</th><th>Result</th></tr>
+      <tr><td>Clean launch, no instrumentation</td><td>Alive; all checks pass; decrypts normally</td></tr>
+      <tr><td>Fully instrumented, sensors interposed</td><td>Alive past 110 s; all check groups green; protected classes decrypted; payload extracted to disk</td></tr>
+      <tr><td>Same attack, hardened build</td><td>Process killed at second 29</td></tr>
+    </table>
+    <p>The extracted payload sat on disk as a dex while the monitor thread, on its randomized sleep cycle, kept reporting that everything was fine. Detection latency in this product is up to about 90 seconds by design; the sleep intervals are deliberately randomized so an attacker cannot time around them. Respect to the design. It was defending against an attacker who plays by its clock. I did not need to beat the clock. I only needed to be the one the clock asked.</p>
+    <p>For the record: keys recovered, ciphertext decrypted, output verified against the app's own compiled artifacts. The receipts are timestamps and file hashes.</p>
+
+    <figure class="move" role="img" aria-label="The defender catches the copper attacking blade with a navy parry">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move06-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move06-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move06-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move06-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move06-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 06</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">LA PARADE</text>
+        <circle cx="649" cy="20" r="3.5" fill="#0081ba" />
+        <text x="638" y="23" fill="#0081ba" font-size="8" text-anchor="end" letter-spacing="1.6">DEFLECTED</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">READ</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">DEFLECT</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">HOLD</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="148" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="148" cy="80" rx="15" ry="18" fill="url(#move06-mask)" stroke-width="1.7" />
+        <path d="M131 96Q148 109 165 96" stroke-width="1.7" opacity=".72" />
+        <path d="M164 78L175 85" stroke-width="2.5" />
+        <path d="M150 108L164 165" />
+        <path d="M152 118L244 128L330 132" />
+        <path d="M152 116L104 139L76 112" />
+        <path d="M164 165L284 178L324 226" />
+        <path d="M164 165L104 198L62 226" />
+        <path d="M322 226L340 226" stroke-width="4" />
+        <path d="M60 226L78 226" stroke-width="4" />
+        <path d="M157 142L172 142" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="330" cy="132" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M322 124Q337 132 322 140" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M340 132L426 132L500 134" fill="none" stroke="#d4814c" stroke-width="2.4" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="538" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="538" cy="80" rx="15" ry="18" fill="url(#move06-mask)" stroke-width="1.7" />
+        <path d="M521 96Q538 109 555 96" stroke-width="1.7" opacity=".72" />
+        <path d="M522 78L511 85" stroke-width="2.5" />
+        <path d="M540 108L548 166" />
+        <path d="M540 118L498 132L464 137" />
+        <path d="M542 116L578 132L600 111" />
+        <path d="M548 166L500 184L468 226" />
+        <path d="M548 166L592 198L624 226" />
+        <path d="M470 226L452 226" stroke-width="4" />
+        <path d="M626 226L608 226" stroke-width="4" />
+        <path d="M541 143L556 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="464" cy="137" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M472 129Q457 137 472 145" stroke="#00405d" stroke-width="2" />
+      </g><path d="M455 130L416 105L382 88" fill="none" stroke="#00405d" stroke-width="2.8" stroke-linecap="round" /><g class="impact-ring" fill="none" stroke="#0081ba"><circle cx="422" cy="112" r="7"/><circle cx="422" cy="112" r="13" opacity=".35"/></g>
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>LA PARADE · the blade meets the blade</figcaption>
+    </figure>
+
+    <h2><span class="no">06</span>The corner adopts the defense</h2>
+    <p>Here is where this file stops being a bypass and starts being something else.</p>
+    <p>I wrote the fix. The sensor reads moved from libc to raw syscalls, issued through inline assembly on both ARM flavors, straight to the kernel. Filesystem-magic validation on every opened path: if a "proc" file does not sit on procfs, it is not a proc file, and a memfd pretending to be one has the wrong magic number. Reads stream in bounded chunks instead of trusting reported sizes. And where the design allowed it, two independent sources must agree before a verdict counts: a forged answer and an unforged one disagree, and disagreement is itself a signal.</p>
+    <div class="flow">before:  sensors → fopen / property_find → verdicts
+  (one interposition point = everything)
+
+after:   sensors → raw svc syscalls → fs-magic check → dual-source
+  (forged answers must now also forge the filesystem)</div>
+    <p>The kernel citations went in with the code. Every mechanism claim in the commit trail links to its source: kernel.org for the filesystem magics, the seq_file implementation for why lseek lies about sizes on proc, the man pages for the errno contracts. The citations do the arguing.</p>
+    <p>It was reviewed, round after round, and merged upstream. By OstrichLab's own CEO.</p>
+    <p>The fix is the part of my internship application the reviewer suggested I delete.</p>
+
+    <figure class="move" role="img" aria-label="The defender ripostes with a navy blade and the scoring lamp finally lights">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move07-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move07-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move07-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move07-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move07-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 07</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">LA RIPOSTE</text>
+        <circle cx="649" cy="20" r="3.5" fill="#0081ba" />
+        <text x="638" y="23" fill="#0081ba" font-size="8" text-anchor="end" letter-spacing="1.6">LIGHT</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">PARRY</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">RETURN</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">SCORE</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.72">
+        <ellipse cx="140" cy="82" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="140" cy="82" rx="15" ry="18" fill="url(#move07-mask)" stroke-width="1.7" />
+        <path d="M123 98Q140 111 157 98" stroke-width="1.7" opacity=".72" />
+        <path d="M156 80L167 87" stroke-width="2.5" />
+        <path d="M144 110L150 168" />
+        <path d="M144 120L112 151L90 180" />
+        <path d="M146 118L112 133L88 112" />
+        <path d="M150 168L198 190L226 226" />
+        <path d="M150 168L104 199L72 226" />
+        <path d="M224 226L242 226" stroke-width="4" />
+        <path d="M70 226L88 226" stroke-width="4" />
+        <path d="M143 145L158 145" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="90" cy="180" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M82 172Q97 180 82 188" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M82 187L54 214L38 226" fill="none" stroke="#d4814c" stroke-width="2.4" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="530" cy="78" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="530" cy="78" rx="15" ry="18" fill="url(#move07-mask)" stroke-width="1.7" />
+        <path d="M513 94Q530 107 547 94" stroke-width="1.7" opacity=".72" />
+        <path d="M514 76L503 83" stroke-width="2.5" />
+        <path d="M528 106L514 164" />
+        <path d="M526 116L432 126L344 129" />
+        <path d="M526 116L576 139L604 111" />
+        <path d="M514 164L394 178L354 226" />
+        <path d="M514 164L576 197L618 226" />
+        <path d="M356 226L338 226" stroke-width="4" />
+        <path d="M620 226L602 226" stroke-width="4" />
+        <path d="M507 141L522 141" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="344" cy="129" r="10" stroke="#0081ba" stroke-width="3" />
+        <path d="M352 121Q337 129 352 137" stroke="#0081ba" stroke-width="2" />
+      </g><path d="M334 129L248 130L174 132" fill="none" stroke="#0081ba" stroke-width="2.8" stroke-linecap="round" /><rect x="302" y="62" width="76" height="32" fill="#0b0c0e" stroke="#34363a" />
+        <circle cx="328" cy="78" r="6" fill="#0081ba" />
+        <circle class="impact-ring" cx="328" cy="78" r="11" fill="none" stroke="#0081ba" opacity=".45" />
+        <circle cx="352" cy="78" r="6" fill="none" stroke="#4a4a4a" />
+        <circle cx="171" cy="132" r="4" fill="none" stroke="#0081ba" stroke-width="1.5" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>LA RIPOSTE · the lamp answers</figcaption>
+    </figure>
+
+    <h2><span class="no">07</span>The light that lit</h2>
+    <p>Fixes are promises until you run the old attack against them. So I did.</p>
+    <div class="proof">same rig, same attack, hardened build
+<span class="out">t+29s   process killed by the runtime</span>
+<span class="out">clean launch, hardened build: all green, decrypts normally</span></div>
+    <p>Twenty-nine seconds in, the runtime caught its own forged sky and pulled the floor out. Clean launches on the same build stayed green, so the kill was not the product being jumpy. It was the product being right.</p>
+    <p>I want to be precise about what that kill is. Every official light that should have recognized this work stayed dark. The QuartzLab eligibility filter never read the code. The OstrichLab advisory process declined the finding. The fix passed review. The finding did not. The scoring apparatus of this whole bout, the part that is supposed to light up when a touch lands, sat there like furniture.</p>
+    <p>Then the vendor shipped my defense, I ran my attack, and the product died on schedule. The only scoring lamp that ever lit for this touch is one I soldered into the opponent's weapon myself.</p>
+    <p>Nobody awarded it. The system confirmed me by refusing to run.</p>
+
+    <figure class="move" role="img" aria-label="Two complete masked fencers face each other with faint echoes behind them">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move08-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move08-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move08-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move08-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move08-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 08</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">LE BOUT</text>
+        <circle cx="649" cy="20" r="3.5" fill="#0081ba" />
+        <text x="638" y="23" fill="#0081ba" font-size="8" text-anchor="end" letter-spacing="1.6">SAME PISTE</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">DISTANCE</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">TIMING</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">COST</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.18">
+        <ellipse cx="126" cy="88" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="126" cy="88" rx="15" ry="18" fill="url(#move08-mask)" stroke-width="1.7" />
+        <path d="M109 104Q126 117 143 104" stroke-width="1.7" opacity=".72" />
+        <path d="M142 86L153 93" stroke-width="2.5" />
+        <path d="M124 114L120 168" />
+        <path d="M124 124L164 136L196 136" />
+        <path d="M122 122L92 140L74 120" />
+        <path d="M120 168L162 188L184 226" />
+        <path d="M120 168L88 198L66 226" />
+        <path d="M182 226L200 226" stroke-width="4" />
+        <path d="M64 226L82 226" stroke-width="4" />
+        <path d="M113 145L128 145" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="196" cy="136" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M188 128Q203 136 188 144" stroke="#d4814c" stroke-width="2" />
+      </g><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.18">
+        <ellipse cx="554" cy="88" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="554" cy="88" rx="15" ry="18" fill="url(#move08-mask)" stroke-width="1.7" />
+        <path d="M537 104Q554 117 571 104" stroke-width="1.7" opacity=".72" />
+        <path d="M538 86L527 93" stroke-width="2.5" />
+        <path d="M556 114L560 168" />
+        <path d="M556 124L516 136L484 136" />
+        <path d="M558 122L588 140L606 120" />
+        <path d="M560 168L518 188L496 226" />
+        <path d="M560 168L592 198L614 226" />
+        <path d="M498 226L480 226" stroke-width="4" />
+        <path d="M616 226L598 226" stroke-width="4" />
+        <path d="M553 145L568 145" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="484" cy="136" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M492 128Q477 136 492 144" stroke="#00405d" stroke-width="2" />
+      </g><g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="202" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="202" cy="80" rx="15" ry="18" fill="url(#move08-mask)" stroke-width="1.7" />
+        <path d="M185 96Q202 109 219 96" stroke-width="1.7" opacity=".72" />
+        <path d="M218 78L229 85" stroke-width="2.5" />
+        <path d="M198 108L192 166" />
+        <path d="M198 118L244 131L282 131" />
+        <path d="M196 116L158 134L136 112" />
+        <path d="M192 166L242 182L272 226" />
+        <path d="M192 166L150 198L118 226" />
+        <path d="M270 226L288 226" stroke-width="4" />
+        <path d="M116 226L134 226" stroke-width="4" />
+        <path d="M185 143L200 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="282" cy="131" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M274 123Q289 131 274 139" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M292 131L326 128L340 129" fill="none" stroke="#d4814c" stroke-width="2.4" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="478" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="478" cy="80" rx="15" ry="18" fill="url(#move08-mask)" stroke-width="1.7" />
+        <path d="M461 96Q478 109 495 96" stroke-width="1.7" opacity=".72" />
+        <path d="M462 78L451 85" stroke-width="2.5" />
+        <path d="M482 108L488 166" />
+        <path d="M482 118L436 131L398 131" />
+        <path d="M484 116L522 134L544 112" />
+        <path d="M488 166L438 182L408 226" />
+        <path d="M488 166L530 198L562 226" />
+        <path d="M410 226L392 226" stroke-width="4" />
+        <path d="M564 226L546 226" stroke-width="4" />
+        <path d="M481 143L496 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="398" cy="131" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M406 123Q391 131 406 139" stroke="#00405d" stroke-width="2" />
+      </g><path d="M388 131L354 128L340 129" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>LE BOUT · everyone fences the same sky</figcaption>
+    </figure>
+
+    <h2><span class="no">08</span>The whole sport</h2>
+    <p>This is the part that matters more than one product.</p>
+    <p>Every client-side self-defense system on the market, every mobile RASP, every DRM stack, every anti-cheat, runs in user space in the same process as its attacker. They differ in skill, not in predicament. The question "am I under attack?" has to be answered through channels that the attacker can interpose on, because there is nowhere else for user-space code to ask. Some hide the asking behind obfuscation, some rotate their tricks, some buy time. None of them change where the asking lives.</p>
+    <p>Detection in this architecture is best-effort, forever. What can be closed is the distance between detection and enforcement. If the sensor channel is kernel-direct and disagreement-aware, the cheap forgery stops working, and the attacker has to escalate to whole-system emulation. That is a real cost asymmetry: one interposition layer versus per-target, per-version emulation work.</p>
+    <table>
+      <tr><th>Cost</th><th>Before the fix</th><th>After</th></tr>
+      <tr><td>Defeat</td><td>Two hooks, one afternoon, every app</td><td>Emulate the whole runtime per target and version</td></tr>
+      <tr><td>Maintain</td><td>Nothing, it is universal</td><td>Per-version, breaks on updates</td></tr>
+      <tr><td>Skills needed</td><td>Frida basics</td><td>Emulation engineering</td></tr>
+    </table>
+
+    <h2><span class="no">09</span>The ceiling</h2>
+    <p>Honesty time, because a case file that only brags is a brochure.</p>
+    <p>The fix closed the proc-file channel and moved the high-value reads to the kernel. It did not close everything. Some property reads remain single-source. Directory enumeration still has interposable corners. The decrypted payload still exists in memory at handoff, and a patient attacker with the right privileges can go fishing for it.</p>
+    <p>And the true ceiling is architectural, not implementational. A sufficiently resourced attacker runs the entire app inside an emulator, feeds it a perfect world, and reads the plaintext at the class loader. No user-space defense escapes that, because the question is being asked inside the thing being emulated. The only walls that hold are the ones the emulator cannot reproduce: a TEE-held key secret, or a server that refuses to enroll a device it cannot attest. No mobile RASP on the market has built that wall. Until someone does, the honest phrase on every datasheet in this category is "raises the cost," and the honest reply is "of course it does. That is what a lock is."</p>
+
+    <div class="closing">
+      <p>Coda. OstrichLab is a stand-in. The real name is the Arabic word for astrolabe: the instrument that reads the sky to tell you where you stand. This one read the hand that held it. I know, because I was the hand. As for the bird, it earned its place the traditional way. The touch landed, and the head went into the sand.</p>
+      <p>The email from section 01 closes its loop here, on a clock. The note that the raw syscalls "add a lot of code without making detection stronger" arrived crossed with my Monday appeal. Tuesday night the bird's sensors learned to speak them. Friday morning the bird's CEO merged the branch. The advice and its refutation share one week on public tape. The merged fix disagrees, and so does the kill at second twenty-nine. The gate never opened. The bout happened anyway.</p>
+      <p>And the vendor's response, in full: the project is brand new with no active usage to qualify for a CVE. Early project or not, the foundation was wrong. Every sensor read through one hookable libc channel, and the key-derivation gates verified the forged state. That is not an early-stage rough edge. That is the load-bearing wall built wrong, whatever the version number says. Better models do not repair an assumption nobody examined.</p>
+      <p>The <a href="https://github.com/Ostorlab/rasp/pull/346">fix</a> is public. The PoC stays held per coordinated disclosure. The receipts are on the tape.</p>
+      <p><em>No light. Touch registered anyway.</em></p>
+    </div>
+
+    <figure class="move" role="img" aria-label="Two masked fencers stand at rest with their blades grounded at the center of the piste">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="move09-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 0H0V22" fill="none" stroke="#17191c" stroke-width="1" />
+          </pattern>
+          <pattern id="move09-mask" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ece8df" stroke-width=".8" opacity=".38" />
+          </pattern>
+          <filter id="move09-rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="8" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
+            <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .07" /></feComponentTransfer>
+          </filter>
+        </defs>
+        <rect width="680" height="280" fill="#0b0c0e" />
+        <rect width="680" height="280" fill="url(#move09-grid)" opacity=".58" />
+        <rect width="680" height="280" filter="url(#move09-rough)" opacity=".12" />
+        <path d="M1 1H679V279H1Z" fill="none" stroke="#34363a" />
+        <path d="M1 48H679" stroke="#34363a" />
+        <text x="20" y="20" fill="#77746e" font-size="8" letter-spacing="2.2">FIELD NOTES / MOVE 09</text>
+        <text x="20" y="38" fill="#ece8df" font-size="12" letter-spacing=".5">TOUCHE</text>
+        <circle cx="649" cy="20" r="3.5" fill="#d85548" />
+        <text x="638" y="23" fill="#d85548" font-size="8" text-anchor="end" letter-spacing="1.6">ON TAPE</text>
+        <path d="M102 132H578" stroke="#25272a" stroke-dasharray="4 9" />
+        <path d="M244 124V140M340 124V140M436 124V140" stroke="#00405d" />
+        <text x="244" y="118" fill="#0081ba" font-size="7" text-anchor="middle">GROUND</text>
+        <text x="340" y="118" fill="#0081ba" font-size="7" text-anchor="middle">RECORD</text>
+        <text x="436" y="118" fill="#0081ba" font-size="7" text-anchor="middle">LEAVE</text>
+        <g fill="none" stroke="#ece8df" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="190" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="190" cy="80" rx="15" ry="18" fill="url(#move09-mask)" stroke-width="1.7" />
+        <path d="M173 96Q190 109 207 96" stroke-width="1.7" opacity=".72" />
+        <path d="M206 78L217 85" stroke-width="2.5" />
+        <path d="M190 108L190 166" />
+        <path d="M190 118L226 138L250 153" />
+        <path d="M188 116L158 137L142 157" />
+        <path d="M190 166L220 197L228 226" />
+        <path d="M190 166L160 198L152 226" />
+        <path d="M226 226L244 226" stroke-width="4" />
+        <path d="M150 226L168 226" stroke-width="4" />
+        <path d="M183 143L198 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="250" cy="153" r="10" stroke="#d4814c" stroke-width="3" />
+        <path d="M242 145Q257 153 242 161" stroke="#d4814c" stroke-width="2" />
+      </g><path d="M258 160L310 196L340 226" fill="none" stroke="#d4814c" stroke-width="2.4" stroke-linecap="round" /><g fill="none" stroke="#777a7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="1">
+        <ellipse cx="490" cy="80" rx="18" ry="21" fill="#111317" />
+        <ellipse cx="490" cy="80" rx="15" ry="18" fill="url(#move09-mask)" stroke-width="1.7" />
+        <path d="M473 96Q490 109 507 96" stroke-width="1.7" opacity=".72" />
+        <path d="M474 78L463 85" stroke-width="2.5" />
+        <path d="M490 108L490 166" />
+        <path d="M490 118L454 138L430 153" />
+        <path d="M492 116L522 137L538 157" />
+        <path d="M490 166L460 197L452 226" />
+        <path d="M490 166L520 198L528 226" />
+        <path d="M454 226L436 226" stroke-width="4" />
+        <path d="M530 226L512 226" stroke-width="4" />
+        <path d="M483 143L498 143" stroke="#77746e" stroke-width="1.7" />
+        <circle cx="430" cy="153" r="10" stroke="#00405d" stroke-width="3" />
+        <path d="M438 145Q423 153 438 161" stroke="#00405d" stroke-width="2" />
+      </g><path d="M422 160L370 196L340 226" fill="none" stroke="#00405d" stroke-width="2.4" stroke-linecap="round" /><circle cx="340" cy="226" r="5" fill="none" stroke="#d85548" stroke-width="1.5" />
+        <path d="M20 230H660" stroke="#5a5b5e" stroke-width="1.5" />
+        <path d="M20 239H660" stroke="#27292c" />
+        <path d="M82 230V239M340 230V239M598 230V239" stroke="#5a5b5e" />
+        <text x="20" y="260" fill="#56575a" font-size="7" letter-spacing="2">PISTE / 14 M</text>
+        <text x="660" y="260" fill="#0081ba" font-size="7" text-anchor="end" letter-spacing="1.5">THE BLADE REMAINS SHARP</text>
+      </svg>
+      <figcaption>TOUCHE · the blades are grounded</figcaption>
+    </figure>
+
+    <h2>Key to the file</h2>
+    <table>
+      <tr><th>Term</th><th>In this file</th></tr>
+      <tr><td>RASP</td><td>runtime application self-protection: the native guard shipped inside the app</td></tr>
+      <tr><td>DBI</td><td>dynamic binary instrumentation: the tools that watch your code run</td></tr>
+      <tr><td>M2</td><td>the final year of a master's or an engineering degree; in Morocco both end with an internship</td></tr>
+      <tr><td>PFE</td><td>projet de fin d'études: the degree-closing internship the final year exists to place</td></tr>
+      <tr><td>QuartzLab</td><td>stand-in for Quarkslab. The pinocchio README names the assignment in one line</td></tr>
+      <tr><td>OstrichLab</td><td>stand-in for Ostorlab. The merge receipt carries the real name in one click</td></tr>
+      <tr><td>the crystal, the bird</td><td>the two above, once the typing gets tired</td></tr>
+      <tr><td>the man at the gate</td><td>the crystal's reviewer, quoted verbatim, unnamed on purpose</td></tr>
+      <tr><td>HeatherCheck</td><td>the fictional team inside the bird's take-home brief</td></tr>
+      <tr><td>pinocchio</td><td>the anti-DBI detector this file started from, public with its failures</td></tr>
+      <tr><td>the tape</td><td>timestamps, commit hashes, and captured output, kept as they arrived</td></tr>
+      <tr><td>the touch</td><td>a landed finding. Scoring was never this file's department</td></tr>
+    </table>
+
+    <div class="links">
+      <a href="/">saladin.su</a>
+      <a href="https://github.com/saladin0x1">github</a>
+      <a href="https://github.com/saladin0x1/pinocchio">pinocchio</a>
+      <a href="https://hackerone.com/saladin0x1">hackerone</a>
+    </div>
+  </article>
+</body>
+</html>
