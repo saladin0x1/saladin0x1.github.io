@@ -6,7 +6,7 @@ Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests ce
 
 ## Canonical Pages
 
-- [Home](https://saladin.su/): Personal profile, current status, social links, and reserved space for future security writing.
+- [Home](https://saladin.su/): Personal profile, current status, social links, and links to security writing and research.
 - [Shadow Cat](https://saladin.su/cat/): Standalone interactive animation created for the site.
 - [Sitemap](https://saladin.su/sitemap.xml): Machine-readable index of public pages.
 
@@ -21,6 +21,7 @@ Salah-Eddine Elouali publishes online as `saladin0x1`. His work and interests ce
 
 ## Research
 
+- [State of Sec Morocco 2026 — Project Site](https://stateofsec.ma): Canonical project site for the survey, linked from the home page research widget.
 - [State of Sec Morocco 2026 — White Paper](https://doi.org/10.5281/zenodo.23947850): First edition of an open, anonymous community survey of Morocco's cybersecurity people. 380+ respondents, all 12 regions plus the diaspora, October 31 to November 15, 2026. 52 pages covering careers, pay, bug bounty, tools, AI, morale, and the Moroccan Cyber Sentiment Index (43.6/100). Open access, CC BY 4.0.
 - [State of Sec Morocco 2026 — Aggregated Results](https://doi.org/10.5281/zenodo.24337485): Open dataset behind the White Paper: shares for 50 of 52 questions, published breakdowns, and the sentiment index in JSON, with the full questionnaire. Aggregates only, no individual answers. ODbL. Also mirrored at github.com/saladin0x1/stateofsec.ma.
 
