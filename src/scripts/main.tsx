@@ -22,7 +22,7 @@ const SOCIAL_LINKS: SocialLink[] = [
   { label: 'LINKEDIN', url: 'https://linkedin.com/in/saladin0x1', icon: FaLinkedin },
   { label: 'GITHUB', url: 'https://github.com/saladin0x1', icon: FaGithub },
   { label: 'HACKERONE', url: 'https://hackerone.com/saladin0x1', icon: SiHackerone },
-  { label: 'MAIL', url: 'mailto:me@saladin.su', icon: FaEnvelope },
+  { label: 'MAIL', url: 'mailto:0x1@saladin.su', icon: FaEnvelope },
   { label: 'INSTA', url: 'https://instagram.com/selouali01', icon: FaInstagram },
   { label: 'X', url: 'https://x.com/selouali01', icon: FaXTwitter },
 ];
@@ -910,9 +910,9 @@ const EmailModal = memo(function EmailModal({ isOpen, onClose }: { isOpen: boole
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">SELECT EMAIL TYPE</div>
         <div className="modal-options">
-          <a href="mailto:me@saladin.su" className="modal-option">
+          <a href="mailto:0x1@saladin.su" className="modal-option">
             <div className="modal-option-label">PERSONAL</div>
-            <div className="modal-option-value">me@saladin.su</div>
+            <div className="modal-option-value">0x1@saladin.su</div>
           </a>
           <a href="mailto:salaheddine.elouali@emsi-edu.ma" className="modal-option">
             <div className="modal-option-label">ACADEMIC</div>
