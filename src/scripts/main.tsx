@@ -214,6 +214,12 @@ const ARTICLES = [
     meta: 'GRAYWARE · SCRAPING',
     url: '/articles/the-crowd-leech/',
   },
+  {
+    index: '06',
+    name: 'No Light',
+    meta: 'LIBC HOOK · RASP BYPASS',
+    url: '/articles/no-light/',
+  },
 ];
 
 const SelectedWork = memo(function SelectedWork() {
